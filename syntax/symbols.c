@@ -1,9 +1,11 @@
 #include "symbols.h"
-#include "./structs/hash_table.h"
+#include <stddef.h>
+#include "../structs/hash_table.h"
 
 HashTable *operations, *directives, *registers;
 
-void symbols_init() {
+void symbols_init()
+{
     operations = hashtable_init();
     hashtable_putint(operations, "mov", OPCODE_MOV);
     hashtable_putint(operations, "cmp", OPCODE_CMP);
@@ -29,29 +31,33 @@ void symbols_init() {
     hashtable_putint(directives, ".extern", DIRECTIVE_EXTERN);
 
     registers = hashtable_init();
-    hashtable_putint(registers, "r0", REGISTER_R0);
-    hashtable_putint(registers, "r1", REGISTER_R1);
-    hashtable_putint(registers, "r2", REGISTER_R2);
-    hashtable_putint(registers, "r3", REGISTER_R3);
-    hashtable_putint(registers, "r4", REGISTER_R4);
-    hashtable_putint(registers, "r5", REGISTER_R5);
-    hashtable_putint(registers, "r6", REGISTER_R6);
-    hashtable_putint(registers, "r7", REGISTER_R7);
+    hashtable_putint(registers, "r0", REGISTER);
+    hashtable_putint(registers, "r1", REGISTER);
+    hashtable_putint(registers, "r2", REGISTER);
+    hashtable_putint(registers, "r3", REGISTER);
+    hashtable_putint(registers, "r4", REGISTER);
+    hashtable_putint(registers, "r5", REGISTER);
+    hashtable_putint(registers, "r6", REGISTER);
+    hashtable_putint(registers, "r7", REGISTER);
 }
 
-int is_opertion(char *str) {
-    return hashtable_getint(operations, str) != -1;
+int is_operation(char *str)
+{
+    return hashtable_getint(operations, str) != NULL;
 }
 
-int is_directive(char *str) {
-    return hashtable_getint(directives, str) != -1;
+int is_directive(char *str)
+{
+    return hashtable_getint(directives, str) != NULL;
 }
 
-int is_register(char *str) {
-    return hashtable_getint(registers, str) != -1;
+int is_register(char *str)
+{
+    return hashtable_getint(registers, str) != NULL;
 }
 
-void symbols_free() {
+void symbols_free()
+{
     hashtable_free(operations);
     hashtable_free(directives);
     hashtable_free(registers);

@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -ansi -Wall -pedantic
-SRCS = structs/*.c syntax/*.c *.c
+SRCS = structs/hash_table.c syntax/helpers.c syntax/symbols.c macros.c main.c
 OBJS = $(SRCS:.c=.o)
 TARGET = asm
 

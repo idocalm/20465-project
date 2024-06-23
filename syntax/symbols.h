@@ -1,7 +1,8 @@
 #ifndef SYMBOLS_H
 #define SYMBOLS_H
 
-enum ESYMBOLS {
+enum ESYMBOLS
+{
     UNKNOWN = -1,
     OPCODE_MOV,
     OPCODE_CMP,
@@ -30,6 +31,7 @@ int is_operation(char *str);
 int is_directive(char *str);
 int is_register(char *str);
 
+void symbols_init();
 void symbols_free();
 
 #endif
