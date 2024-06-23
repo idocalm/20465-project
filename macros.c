@@ -39,6 +39,7 @@ MacroResult *search_macros_in_file(const char *fileName)
             /* Skip any spaces after the macro start prefix */
             skip_spaces(&line_start);
 
+            /*TODO: fix macro name, note: without newline*/
             /* Get the macro name */
             macroName = (char *)alloc(strlen(line_start) + 1);
             strcpy(macroName, line_start);
@@ -55,7 +56,6 @@ MacroResult *search_macros_in_file(const char *fileName)
                 result->error = EXTRANEOUS_CHARACTERS;
                 return result;
             }
-
             /* Null-terminate the macro name */
             *line_start = '\0';
 
@@ -67,6 +67,13 @@ MacroResult *search_macros_in_file(const char *fileName)
             if (is_operation(macroName) || is_register(macroName) || is_directive(macroName))
             {
                 result->error = INVALID_MACRO_NAME;
+                return result;
+            }
+
+            /* Check if the macro is already defined */
+            if (hashtable_getstr(macros, macroName) != NULL)
+            {
+                result->error = MULTIPLE_MACRO_DEFINITIONS;
                 return result;
             }
 
@@ -84,7 +91,6 @@ MacroResult *search_macros_in_file(const char *fileName)
             {
                 is_in_macro = 0;
 
-                /* Null-terminate the macro value */
                 printf("Macro %s\n%s\n", macroName, macroValue);
                 /* Add the macro value to the hash table */
                 hashtable_putstr(macros, macroName, macroValue);
@@ -109,12 +115,55 @@ MacroResult *search_macros_in_file(const char *fileName)
     }
 
     fclose(file);
-
     return result;
 }
 
-int replace_macros_in_file(const char *fileName)
+int replace_macros_in_file(const char *fileName, HashTable *result)
 {
-    /* TODO */
-    return 0;
+    FILE *file = fopen(fileName, "r");
+    char *newFileName = (char *)alloc(strlen(fileName));
+    strcpy(newFileName, fileName);
+    /*TODO: improve file extantion changing*/
+    newFileName[strlen(fileName) - 2] = 'a';
+    newFileName[strlen(fileName) - 1] = 'm';
+    printf("Creating new file %s\n", newFileName);
+
+    FILE *newFile = fopen(newFileName, "w");
+
+    char *line_start = NULL;
+    char line[MAX_LINE_SIZE];
+    int is_in_macro = 0;
+
+    /* Go over the result macros and replace them in the file every time you see the macro name, when it's NOT the actual definition */
+
+    while (fgets(line, MAX_LINE_SIZE, file) != NULL)
+    {
+        line_start = line;
+        skip_spaces(&line_start);
+
+        if (strncmp(line_start, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0)
+        {
+            is_in_macro = 1;
+            continue;
+        }
+        else if (strncmp(line_start, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0)
+        {
+            is_in_macro = 0;
+            continue;
+        }
+
+        if (is_in_macro)
+        {
+            continue;
+        }
+        printf("key: %s\nvalue: %s", line, hashtable_getstr(result, line_start));
+        if (hashtable_getstr(result, line_start) != NULL)
+        {
+            fprintf(newFile, "%s", hashtable_getstr(result, line_start));
+        }
+        else
+        {
+            fprintf(newFile, "%s", line);
+        }
+    }
 }

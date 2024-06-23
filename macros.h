@@ -1,3 +1,6 @@
+#ifndef MACROS_H
+#define MACROS_H
+
 #include "structs/hash_table.h"
 
 #define MAX_LINE_SIZE 80
@@ -19,3 +22,6 @@ typedef struct
 } MacroResult;
 
 MacroResult *search_macros_in_file(const char *fileName);
+int replace_macros_in_file(const char *fileName, HashTable *result);
+
+#endif
