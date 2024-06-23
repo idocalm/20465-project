@@ -1,183 +1,96 @@
 #include "macros.h"
 
-/* 
-    This function checks if a string is a macro definition 
-    if it is, it returns a pointer to a macro struct, otherwise it returns NULL
+MacroResult *search_macros_in_file(const char *fileName) {
+    char *line_start = NULL; /* Pointer to the start of the line */
+    char line[MAX_LINE_SIZE]; /* Buffer to store the line */
+    int is_in_macro = 0; /* Flag to indicate if we are inside a macro */
+    char *macroValue = NULL; /* Buffer to store the current macro value */
 
-    This function does NOT fill the macro with the content, it only fills the name field. 
+    FILE *file = open_file(fileName, "r"); 
 
-*/
+    MacroResult *result = (*MacroResult)alloc(sizeof(MacroResult));
+    result->error = NO_ERROR;
+
+    HashTable *macros = hashtable_init(); /* Create a new hash table to store the macros */
+    result->macros = macros;
+
+    while (fgets(line, MAX_LINE_SIZE, file) != NULL) {
+        /* Skip any spaces at the beginning of the line */
+        skip_spaces(&line_start);
+
+        /* Check if the line starts with the macro start prefix */
+        if (strncmp(line_start, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0) {
+            /* Skip the macro start prefix */
+            line_start += strlen(MACRO_START_PREFIX);
+
+            /* Skip any spaces after the macro start prefix */
+            skip_spaces(&line_start);
+
+            /* Get the macro name */
+            char *macroName = line_start;
+
+            /* Find the end of the macro name */
+            while (*line_start != ' ' && *line_start != '\t' && *line_start != '\n') {
+                line_start++;
+            }
+
+            /* Make sure there is a space after the macro name */
+            if (*line_start != ' ' && *line_start != '\t' || *line_start == '\n') {
+                result->error = EXTRANEOUS_CHARACTERS;
+                return result;
+            }
+
+            /* Null-terminate the macro name */
+            *line_start = '\0';
+
+            /* Skip any spaces after the macro name */
+            skip_spaces(&line_start);
+
+            /* Check that the name is not an operation or a register */
+
+            if (is_opertion(macroName) || is_register(macroName) || is_directive(macroName)) {
+                result->error = INVALID_MACRO_NAME;
+                return result;
+            }
+
+            /* Add the macro to the hash table */
+            hashtable_putstr(macros, macroName);
+
+            is_in_macro = 1;
+
+        } else if (is_in_macro) {
+
+            /* Skip any spaces at the beginning of the line */
+            skip_spaces(&line_start);
+
+            /* Check if the line starts with the macro end prefix */
+            if (strncmp(line_start, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
+                is_in_macro = 0;
+
+                /* Null-terminate the macro value */
+                *macroValue = '\0';
+
+                /* Add the macro value to the hash table */
+                hashtable_putstr(macros, macroName, macroValue);
 
 
-struct macro *isMacroDefinition(char *line) {
+            } else {
+                /* Add the line to the macro value */
+                strcat(macroValue, line);
+            }
 
-    /* Spaces or tabs at the beginning of the line are ignored */
-    int i = 0;
-    skipSpaces(line, &i);
-
-    char *macroName = NULL;
-    struct macro *macro = NULL;
-
-
-    if (strncmp(line + i, MACRO_START_KEYWORD, strlen(MACRO_START_KEYWORD)) != 0) {
-        return NULL; 
-    }
-
-
-    /* Found a macro definition, skip over it to find the name */ 
-    i += strlen(MACRO_START_KEYWORD) + 1; 
-
-    /* Skip over spaces and tabs */
-    skipSpaces(line, &i);
-
-    macroName = line + i;
-
-
-    while (macroName[i] != ' ' && macroName[i] != '\t' && macroName[i] != '\0') {
-        i++;
-    }
-
-
-    macroName[i] = '\0';
-
-    /* Check if there are extraneous characters after the macro name */
-
-    skipSpaces(line, &i);
-
-    if (line[i] != '\0') {
-        return EXTRANEOUS_MACRO_CHARS;
-    }
-
-    if (validateMacroName(macroName) != 0) {
-        return UNVALID_MACRO_NAME;
-    }
-
-    /* Allocate memory for the macro */
-
-    macro = (struct macro *) malloc(sizeof(struct macro));
-
-    if (macro == NULL) {
-        printf("[Error]: Could not allocate memory for the macro %s \n", macroName);
-        exit(1);
-    }
-
-    /* Assign values to the macro struct */
-    strcpy(macro->name, macroName);
-    strcpy(macro->value, "\0");
-    macro->next = NULL;
-    
-
-    return macro;
-
-}
-
-/* 
-    This function is used to determine the macro value after isMacroDefinition has been called successfully.
-    It fills the value field of the macro struct with the macro value.
-*/
-
-void fillMacroValue(FILE *file, struct macro *macro) {
-
-    char line[MAX_LINE_LENGTH];
-    char macroValue[MAX_LINE_LENGTH];
-    int i = 0;
-    int readFlag = 1; 
-
-    while (readFlag) {
-        
-        fgets(line, MAX_LINE_LENGTH, file);
-
-        if (strncmp(line, MACRO_END_KEYWORD, strlen(MACRO_END_KEYWORD)) == 0) {
-            readFlag = 0;
         }
 
-        strncat(macroValue, line, MAX_LINE_LENGTH);
-
-
-        i += strlen(line);
-    }
-
-    macroValue[i] = '\0';
-
-    strcpy(macro->value, macroValue);
-}
-
-
-int scanMacros(char *fileName, struct macro *macro) {
-    FILE *file = fopen(fileName, "r");
-
-    if (file == NULL) {
-        return UNABLE_TO_OPEN_FILE;
-    }
-
-    char line[MAX_LINE_LENGTH];
-    struct macro *currentMacro = NULL;
-
-    while (fgets(line, MAX_LINE_LENGTH, file)) {
-
-        currentMacro = NULL;
-
-        if ((currentMacro = isMacroDefinition(line)) != NULL) {
-
-            /* Fill the macro value */
-            fillMacroValue(file, currentMacro);
-
-
-            /* Add the macro to the list */
-            macro->next = currentMacro;
-            macro = currentMacro;
-
-        }        
 
     }
-
-    /* Close the file for now */
 
     fclose(file);
 
-    return 0; 
+    return result;
 
 }
 
-void replaceMacros(char *fileName, struct macro *macroHead) {
-
-    FILE *originalFile = fopen(fileName, "r");
-    FILE *newFile = NULL;
-    char line[MAX_LINE_LENGTH];
-    char newFile[MAX_LINE_LENGTH];
-
-    if (originalFile == NULL) {
-        printf("[Error]: Could not open file %s \n", fileName);
-        exit(1);
-    }
-
-    strcpy(newFile, fileName);
-    strcat(newFile, ".am", 3);
-
-    newFile = fopen(newFile, "w");
-
-
-    if (newFile == NULL) {
-        printf("[Error]: Could not open file %s \n", newFile);
-        exit(1);
-    }
-
-    while (fgets(line, MAX_LINE_LENGTH, originalFile)) {
-        struct macro *currentMacro = macroHead;
-
-        while (currentMacro != NULL) {
-            if (strncmp(line, currentMacro->name, strlen(currentMacro->name)) == 0) {
-                fputs(currentMacro->value, newFile);
-            }
-            currentMacro = currentMacro->next;
-        }
-
-        fputs(line, newFile);
-    }
-
-    fclose(originalFile);
-    fclose(newFile);
-
-    
-}    
-
+int replace_macros_in_file(const char *fileName) {
+    /* TODO */ 
+    return 0;
+}
