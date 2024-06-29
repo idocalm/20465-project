@@ -7,7 +7,7 @@ HashTable *operations, *directives, *registers;
 void symbols_init()
 {
     operations = hashtable_init();
-    hashtable_putint(operations, "mov", OPCODE_MOV);
+    /* hashtable_putint(operations, "mov", OPCODE_MOV); */
     hashtable_putint(operations, "cmp", OPCODE_CMP);
     hashtable_putint(operations, "add", OPCODE_ADD);
     hashtable_putint(operations, "sub", OPCODE_SUB);

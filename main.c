@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "macros.h"
 #include "syntax/symbols.h"
 #include "macros.h"
@@ -18,10 +20,13 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "Error in file %s: ", argv[i]);
+            fprintf(stderr, "Error in file %s: %d", argv[i], res->error);
             return res->error;
         }
+        free(res);
     }
+    printf("Finished. Releasing memory allocated... \n");
+    hashtable_free(res->macros);
     symbols_free();
     return 0;
 }

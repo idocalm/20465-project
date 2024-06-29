@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <ctype.h>
 /* skip_spaces - move the pointer to the first non-space character */
 void skip_spaces(char **p)
 {
@@ -32,4 +33,15 @@ void *alloc(size_t size)
         exit(1);
     }
     return p;
+}
+/* copy_string - takes a destination string and copies everything from the source WITHOUT remaining spaces */
+void copy_string_until_space(char *dest, const char *src)
+{
+    int i = 0, j = 0;
+    while (!isspace(src[j]))
+    {
+        dest[i] = src[j];
+        i++;
+        j++;
+    }
 }
