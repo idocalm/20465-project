@@ -5,7 +5,11 @@
 
 #define MAX_LINE_SIZE 80
 #define MACRO_START_PREFIX "macr"
+#define MACRO_START_PREFIX_LEN strlen(MACRO_START_PREFIX)
 #define MACRO_END_PREFIX "endmacr"
+#define MACRO_END_PREFIX_LEN strlen(MACRO_END_PREFIX)
+#define COMMENT_PREFIX ";"
+#define COMMENT_PREFIX_LEN strlen(COMMENT_PREFIX)
 
 enum MacroErorrs
 {
@@ -22,6 +26,7 @@ typedef struct
     HashTable *macros;
 } MacroResult;
 
+MacroResult replace_macros(char *p_fileName);
 MacroResult *search_macros_in_file(const char *fileName);
 int replace_macros_in_file(const char *fileName, HashTable *result);
 

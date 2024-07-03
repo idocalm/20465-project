@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "macros.h"
+#include "syntax/helpers.h"
 #include "syntax/symbols.h"
 #include "macros.h"
 
@@ -9,24 +9,30 @@ int main(int argc, char *argv[])
 {
     int i;
     MacroResult *res = NULL;
+    if (argc < 2)
+    {
+        log_error("No files provided\n\tUsage: %s <file1> <file2> ... <fileN>\n", argv[0]);
+        exit(1);
+    }
     symbols_init();
-    printf("Searching for macros in %d files\n", argc);
+    log_info("Searching for macros in %d files\n", argc-1);
     for (i = 1; i < argc; i++)
     {
-        res = search_macros_in_file(argv[i]);
+        /*TODO: when finding error in a file, skip the file*/
+        res = replace_macros(argv[i]);
         if (res->error == NO_ERROR)
         {
-            replace_macros_in_file(argv[i], res->macros);
+            log_info("File %s processed successfully\n", argv[i]);
         }
         else
         {
-            fprintf(stderr, "Error in file %s: %d", argv[i], res->error);
-            return res->error;
+            log_error("Error in file (Skipping) %s: %d", argv[i], res->error);
         }
-        free(res);
+        safe_free(res);
     }
-    printf("Finished. Releasing memory allocated... \n");
-    hashtable_free(res->macros);
+    log_info("Finished. Releasing memory allocated... \n");
+    ht_free(res->macros);
+    safe_free(res);
     symbols_free();
     return 0;
 }

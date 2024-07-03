@@ -1,64 +1,65 @@
-#include "symbols.h"
+#include <stdlib.h>
 #include <stddef.h>
+#include "symbols.h"
 #include "../structs/hash_table.h"
 
-HashTable *operations, *directives, *registers;
+ht_t *operations, *directives, *registers;
 
 void symbols_init()
 {
-    operations = hashtable_init();
-    /* hashtable_putint(operations, "mov", OPCODE_MOV); */
-    hashtable_putint(operations, "cmp", OPCODE_CMP);
-    hashtable_putint(operations, "add", OPCODE_ADD);
-    hashtable_putint(operations, "sub", OPCODE_SUB);
-    hashtable_putint(operations, "not", OPCODE_NOT);
-    hashtable_putint(operations, "clr", OPCODE_CLR);
-    hashtable_putint(operations, "lea", OPCODE_LEA);
-    hashtable_putint(operations, "inc", OPCODE_INC);
-    hashtable_putint(operations, "dec", OPCODE_DEC);
-    hashtable_putint(operations, "jmp", OPCODE_JMP);
-    hashtable_putint(operations, "bne", OPCODE_BNE);
-    hashtable_putint(operations, "red", OPCODE_RED);
-    hashtable_putint(operations, "prn", OPCODE_PRN);
-    hashtable_putint(operations, "jsr", OPCODE_JSR);
-    hashtable_putint(operations, "rts", OPCODE_RTS);
-    hashtable_putint(operations, "stop", OPCODE_STOP);
+    operations = ht_create();
+    ht_set(operations, "mov", itoa(OPCODE_MOV));
+    ht_set(operations, "cmp", itoa(OPCODE_CMP));
+    ht_set(operations, "add", itoa(OPCODE_ADD));
+    ht_set(operations, "sub", itoa(OPCODE_SUB));
+    ht_set(operations, "not", itoa(OPCODE_NOT));
+    ht_set(operations, "clr", itoa(OPCODE_CLR));
+    ht_set(operations, "lea", itoa(OPCODE_LEA));
+    ht_set(operations, "inc", itoa(OPCODE_INC));
+    ht_set(operations, "dec", itoa(OPCODE_DEC));
+    ht_set(operations, "jmp", itoa(OPCODE_JMP));
+    ht_set(operations, "bne", itoa(OPCODE_BNE));
+    ht_set(operations, "red", itoa(OPCODE_RED));
+    ht_set(operations, "prn", itoa(OPCODE_PRN));
+    ht_set(operations, "jsr", itoa(OPCODE_JSR));
+    ht_set(operations, "rts", itoa(OPCODE_RTS));
+    ht_set(operations, "stop", itoa(OPCODE_STOP));
 
-    directives = hashtable_init();
-    hashtable_putint(directives, ".data", DIRECTIVE_DATA);
-    hashtable_putint(directives, ".string", DIRECTIVE_STRING);
-    hashtable_putint(directives, ".entry", DIRECTIVE_ENTRY);
-    hashtable_putint(directives, ".extern", DIRECTIVE_EXTERN);
+    directives = ht_create();
+    ht_set(directives, ".data", itoa(DIRECTIVE_DATA));
+    ht_set(directives, ".string", itoa(DIRECTIVE_STRING));
+    ht_set(directives, ".entry", itoa(DIRECTIVE_ENTRY));
+    ht_set(directives, ".extern", itoa(DIRECTIVE_EXTERN));
 
-    registers = hashtable_init();
-    hashtable_putint(registers, "r0", REGISTER);
-    hashtable_putint(registers, "r1", REGISTER);
-    hashtable_putint(registers, "r2", REGISTER);
-    hashtable_putint(registers, "r3", REGISTER);
-    hashtable_putint(registers, "r4", REGISTER);
-    hashtable_putint(registers, "r5", REGISTER);
-    hashtable_putint(registers, "r6", REGISTER);
-    hashtable_putint(registers, "r7", REGISTER);
+    registers = ht_create();
+    ht_set(registers, "r0", itoa(REGISTER));
+    ht_set(registers, "r1", itoa(REGISTER));
+    ht_set(registers, "r2", itoa(REGISTER));
+    ht_set(registers, "r3", itoa(REGISTER));
+    ht_set(registers, "r4", itoa(REGISTER));
+    ht_set(registers, "r5", itoa(REGISTER));
+    ht_set(registers, "r6", itoa(REGISTER));
+    ht_set(registers, "r7", itoa(REGISTER));
 }
 
 int is_operation(char *str)
 {
-    return hashtable_getint(operations, str) != NULL;
+    return ht_get(operations, str) != NULL;
 }
 
 int is_directive(char *str)
 {
-    return hashtable_getint(directives, str) != NULL;
+    return ht_get(directives, str) != NULL;
 }
 
 int is_register(char *str)
 {
-    return hashtable_getint(registers, str) != NULL;
+    return ht_get(registers, str) != NULL;
 }
 
 void symbols_free()
 {
-    hashtable_free(operations);
-    hashtable_free(directives);
-    hashtable_free(registers);
+    ht_free(operations);
+    ht_free(directives);
+    ht_free(registers);
 }

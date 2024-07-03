@@ -3,126 +3,181 @@
 #include "hash_table.h"
 #include "../syntax/helpers.h"
 
-unsigned int hash(char *key)
+unsigned int hash(const char *key)
 {
-    unsigned int hash = 0;
-    int i;
-    for (i = 0; key[i] != '\0'; i++)
+    unsigned long int value = 0;
+    unsigned int i = 0;
+    unsigned int key_len = strlen(key);
+
+    for (; i < key_len; ++i)
     {
-        hash = 31 * hash + key[i];
+        value = value * 37 + key[i];
     }
-    return hash % HASH_TABLE_SIZE;
+
+    value = value % HASH_TABLE_SIZE;
+
+    return value;
 }
 
-HashTable *hashtable_init()
+entry_t *ht_pair(const char *key, const char *value)
 {
+    entry_t *entry = malloc(sizeof(entry_t) * 1);
+    entry->key = malloc(strlen(key) + 1);
+    entry->value = malloc(strlen(value) + 1);
+
+    strcpy(entry->key, key);
+    strcpy(entry->value, value);
+
+    entry->next = NULL;
+
+    return entry;
+}
+
+ht_t *ht_create(void)
+{
+    ht_t *hashtable = malloc(sizeof(ht_t) * 1);
+
+    hashtable->entries = malloc(sizeof(entry_t *) * HASH_TABLE_SIZE);
+
     int i = 0;
-    HashTable *ht = (HashTable *)alloc(sizeof(HashTable));
-    ht->size = 0;
-    for (; i < HASH_TABLE_SIZE; i++)
+    for (; i < HASH_TABLE_SIZE; ++i)
     {
-        ht->nodes[i] = NULL;
+        hashtable->entries[i] = NULL;
     }
-    return ht;
+
+    return hashtable;
 }
 
-HashTableNode *get_node(HashTable *ht, char *key)
+void ht_set(ht_t *hashtable, const char *key, const char *value)
 {
-    unsigned int index = hash(key);
-    HashTableNode *node = ht->nodes[index];
-    while (node != NULL)
+    unsigned int slot = hash(key);
+
+    entry_t *entry = hashtable->entries[slot];
+
+    if (entry == NULL)
     {
-        if (strcmp(node->key, key) == 0)
-        {
-            return node;
-        }
-        node = node->next;
+        hashtable->entries[slot] = ht_pair(key, value);
+        return;
     }
+
+    entry_t *prev;
+
+    while (entry != NULL)
+    {
+        if (strcmp(entry->key, key) == 0)
+        {
+            free(entry->value);
+            entry->value = malloc(strlen(value) + 1);
+            strcpy(entry->value, value);
+            return;
+        }
+
+        prev = entry;
+        entry = prev->next;
+    }
+
+    prev->next = ht_pair(key, value);
+}
+
+char *ht_get(ht_t *hashtable, const char *key)
+{
+    unsigned int slot = hash(key);
+
+    entry_t *entry = hashtable->entries[slot];
+
+    if (entry == NULL)
+    {
+        return NULL;
+    }
+
+    while (entry != NULL)
+    {
+        if (strcmp(entry->key, key) == 0)
+        {
+            return entry->value;
+        }
+
+        entry = entry->next;
+    }
+
     return NULL;
 }
 
-void *put_node(HashTable *ht, HashTableNode *node)
+void ht_del(ht_t *hashtable, const char *key)
 {
-    unsigned int index = hash(node->key);
-    HashTableNode *old_node = get_node(ht, node->key);
-    if (old_node != NULL)
+    unsigned int bucket = hash(key);
+
+    entry_t *entry = hashtable->entries[bucket];
+
+    if (entry == NULL)
     {
-        old_node->value = node->value;
-    }
-    else
-    {
-        node->next = ht->nodes[index];
-        ht->nodes[index] = node;
-        ht->size++;
-    }
-}
-
-void hashtable_putint(HashTable *ht, char *key, int value)
-{
-    HashTableNode *node = (HashTableNode *)alloc(sizeof(HashTableNode));
-    node->key = alloc(strlen(key));
-    strcpy(node->key, key);
-    node->value = alloc(sizeof(value));
-    *(int *)node->value = value;
-    put_node(ht, node);
-}
-
-int *hashtable_getint(HashTable *ht, char *key)
-{
-    HashTableNode *node = get_node(ht, key);
-    if (node == NULL)
-    {
-        return NULL;
-    }
-    return (int *)node->value;
-}
-
-void hashtable_putstr(HashTable *ht, char *key, char *value)
-{
-    HashTableNode *node = (HashTableNode *)alloc(sizeof(HashTableNode));
-    node->key = alloc(strlen(key));
-    strcpy(node->key, key);
-    node->value = (char *)alloc(strlen(value));
-    strcpy(node->value, value);
-    put_node(ht, node);
-}
-
-char *hashtable_getstr(HashTable *ht, char *key)
-{
-    HashTableNode *node = get_node(ht, key);
-    printf("key: %s\n", key);
-    if (node == NULL)
-    {
-        return NULL;
-    }
-    return node->value;
-}
-
-void hashtable_free(HashTable *ht)
-{
-    printf("ht is %p\n", ht);
-    if (ht == NULL)
         return;
+    }
 
-    printf("Freeing hashtable\n");
-    printf("Size: %d\n", ht->size);
+    entry_t *prev;
+    int idx = 0;
 
-    int i;
-    HashTableNode *node, *next;
-    for (i = 0; i < HASH_TABLE_SIZE; i++)
+    while (entry != NULL)
     {
-        node = ht->nodes[i];
-        printf("Freeing node %d\n", i);
-
-        while (node != NULL)
+        if (strcmp(entry->key, key) == 0)
         {
-            printf("Node key: %s, with value: %s \n", node->key, node->value);
-            next = node->next;
-            free(node->key);
-            free(node->value);
-            free(node);
-            node = next;
+            if (entry->next == NULL && idx == 0)
+            {
+                hashtable->entries[bucket] = NULL;
+            }
+
+            if (entry->next != NULL && idx == 0)
+            {
+                hashtable->entries[bucket] = entry->next;
+            }
+
+            if (entry->next == NULL && idx != 0)
+            {
+                prev->next = NULL;
+            }
+
+            if (entry->next != NULL && idx != 0)
+            {
+                prev->next = entry->next;
+            }
+
+            free(entry->key);
+            free(entry->value);
+            free(entry);
+
+            return;
+        }
+
+        prev = entry;
+        entry = prev->next;
+
+        ++idx;
+    }
+}
+
+void ht_free(ht_t *hashtable)
+{
+    int i;
+    for (i = 0; i < HASH_TABLE_SIZE; ++i)
+    {
+        entry_t *entry = hashtable->entries[i];
+
+        if (entry == NULL)
+        {
+            continue;
+        }
+
+        while (entry != NULL)
+        {
+            entry_t *prev = entry;
+            entry = prev->next;
+
+            free(prev->key);
+            free(prev->value);
+            free(prev);
         }
     }
-    free(ht);
+
+    free(hashtable->entries);
+    free(hashtable);
 }

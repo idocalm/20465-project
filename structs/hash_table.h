@@ -1,29 +1,24 @@
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
-#define HASH_TABLE_SIZE 255 /* TODO: Make the size dynamic */
+#define HASH_TABLE_SIZE 100
 
-typedef struct Node
+typedef struct entry_t
 {
     char *key;
-    void *value;
-    struct Node *next;
-} HashTableNode;
+    char *value;
+    struct entry_t *next;
+} entry_t;
 
 typedef struct
 {
-    HashTableNode *nodes[HASH_TABLE_SIZE];
-    int size;
-} HashTable;
+    entry_t **entries;
+} ht_t;
 
-unsigned int hash(char *key);
-HashTable *hashtable_init();
-HashTableNode *get_node(HashTable *ht, char *key);
-void *put_node(HashTable *ht, HashTableNode *node);
-void hashtable_putint(HashTable *ht, char *key, int value);
-int *hashtable_getint(HashTable *ht, char *key);
-void hashtable_putstr(HashTable *ht, char *key, char *value);
-char *hashtable_getstr(HashTable *ht, char *key);
-void hashtable_free(HashTable *ht);
+ht_t *ht_create(void);
+char *ht_get(ht_t *hashtable, const char *key);
+void ht_set(ht_t *hashtable, const char *key, const char *value);
+void ht_del(ht_t *hashtable, const char *key);
+void ht_free(ht_t *hashtable);
 
 #endif
