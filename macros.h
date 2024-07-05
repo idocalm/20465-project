@@ -20,14 +20,14 @@ enum MacroErorrs
     MACRO_NOT_FOUND
 };
 
+
+
 typedef struct
 {
     int error;
-    HashTable *macros;
+    ht_t *macros;
 } MacroResult;
 
-MacroResult replace_macros(char *p_fileName);
-MacroResult *search_macros_in_file(const char *fileName);
-int replace_macros_in_file(const char *fileName, HashTable *result);
+MacroResult *replace_macros(const char *p_fileName);
 
 #endif

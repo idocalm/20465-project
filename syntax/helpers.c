@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "helpers.h"
 #include "../macros.h"
@@ -88,13 +89,13 @@ void safe_free(void *ptr)
 {
     if (ptr == NULL)
     {
-        log_warning("Trying to free NULL pointer\n");
+        /*log_warning("Trying to free NULL pointer\n");*/
         return;
     }
     free(ptr);
 }
 
-FILE *open_file(char *filename, char *mode)
+FILE *open_file(const char *filename, char *mode)
 {
     FILE *file = fopen(filename, mode);
     if (file == NULL)
@@ -141,3 +142,4 @@ void copy_string_until_space(char *dest, const char *src)
         j++;
     }
 }
+

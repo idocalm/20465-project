@@ -3,6 +3,8 @@
 #include "hash_table.h"
 #include "../syntax/helpers.h"
 
+
+
 unsigned int hash(const char *key)
 {
     unsigned long int value = 0;
@@ -35,11 +37,11 @@ entry_t *ht_pair(const char *key, const char *value)
 
 ht_t *ht_create(void)
 {
+    int i = 0;
     ht_t *hashtable = malloc(sizeof(ht_t) * 1);
 
     hashtable->entries = malloc(sizeof(entry_t *) * HASH_TABLE_SIZE);
 
-    int i = 0;
     for (; i < HASH_TABLE_SIZE; ++i)
     {
         hashtable->entries[i] = NULL;
@@ -50,8 +52,8 @@ ht_t *ht_create(void)
 
 void ht_set(ht_t *hashtable, const char *key, const char *value)
 {
+    entry_t *prev;
     unsigned int slot = hash(key);
-
     entry_t *entry = hashtable->entries[slot];
 
     if (entry == NULL)
@@ -60,7 +62,6 @@ void ht_set(ht_t *hashtable, const char *key, const char *value)
         return;
     }
 
-    entry_t *prev;
 
     while (entry != NULL)
     {
@@ -105,17 +106,17 @@ char *ht_get(ht_t *hashtable, const char *key)
 
 void ht_del(ht_t *hashtable, const char *key)
 {
+    
+    entry_t *prev;
+    int idx = 0;
     unsigned int bucket = hash(key);
-
     entry_t *entry = hashtable->entries[bucket];
+
 
     if (entry == NULL)
     {
         return;
     }
-
-    entry_t *prev;
-    int idx = 0;
 
     while (entry != NULL)
     {
@@ -160,7 +161,9 @@ void ht_free(ht_t *hashtable)
     int i;
     for (i = 0; i < HASH_TABLE_SIZE; ++i)
     {
+   
         entry_t *entry = hashtable->entries[i];
+
 
         if (entry == NULL)
         {

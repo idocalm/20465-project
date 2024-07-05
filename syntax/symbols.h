@@ -1,9 +1,11 @@
 #ifndef SYMBOLS_H
 #define SYMBOLS_H
+#include <stdio.h>
+
 
 enum ESYMBOLS
 {
-    UNKNOWN = -1,
+    UNKNOWN,
     OPCODE_MOV,
     OPCODE_CMP,
     OPCODE_ADD,
@@ -26,6 +28,8 @@ enum ESYMBOLS
     DIRECTIVE_EXTERN,
     REGISTER
 };
+
+
 
 int is_operation(char *str);
 int is_directive(char *str);

@@ -3,7 +3,7 @@ macr m_macr
     mov A, r2
 endmacr 
 
-FAIMANYGAY
+mov
 
 macr m_macr_2
     inc r3
@@ -22,10 +22,8 @@ endmacr
 
 m_macr
 
-jasdjkla
+dsjaklj
 
 m_macr_3
-
-sdaldalkj
 
 m_macr_2

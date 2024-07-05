@@ -7,6 +7,9 @@
 
 int main(int argc, char *argv[])
 {
+
+    printf("----------------------\n");
+
     int i;
     MacroResult *res = NULL;
     if (argc < 2)
@@ -26,13 +29,14 @@ int main(int argc, char *argv[])
         }
         else
         {
-            log_error("Error in file (Skipping) %s: %d", argv[i], res->error);
+            log_error("Error in file (Skipping) %s: with code: %d\n", argv[i], res->error);
         }
         safe_free(res);
     }
-    log_info("Finished. Releasing memory allocated... \n");
-    ht_free(res->macros);
-    safe_free(res);
+    log_info("Finished. \n");
+
+    printf("----------------------\n");
+
     symbols_free();
     return 0;
 }

@@ -1,9 +1,17 @@
-FAIMANYGAY
-inc r2
-mov A, r2
-jasdjkla
+dmacr    inc r2
+    mov A, r2
+endmacr
+mov
+
+
+
+
+m_macr
+
+dsjaklj
+
 inc r4
 mov A, r4
-sdaldalkj
+
 inc r3
 mov A, r3

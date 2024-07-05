@@ -1,13 +1,30 @@
 #include <stdlib.h>
+
 #include <stddef.h>
+#include <string.h>
+
+
 #include "symbols.h"
 #include "../structs/hash_table.h"
+#include "../syntax/helpers.h"
 
 ht_t *operations, *directives, *registers;
 
+char *itoa(int num)
+{
+    int length = snprintf(NULL, 0, "%d", num);
+    char *str = (char *) safe_malloc(length + 1);
+    snprintf(str, length + 1, "%d", num);
+    return str;
+}
+
 void symbols_init()
 {
+    
     operations = ht_create();
+    directives = ht_create();
+    registers = ht_create();
+
     ht_set(operations, "mov", itoa(OPCODE_MOV));
     ht_set(operations, "cmp", itoa(OPCODE_CMP));
     ht_set(operations, "add", itoa(OPCODE_ADD));
@@ -25,13 +42,11 @@ void symbols_init()
     ht_set(operations, "rts", itoa(OPCODE_RTS));
     ht_set(operations, "stop", itoa(OPCODE_STOP));
 
-    directives = ht_create();
     ht_set(directives, ".data", itoa(DIRECTIVE_DATA));
     ht_set(directives, ".string", itoa(DIRECTIVE_STRING));
     ht_set(directives, ".entry", itoa(DIRECTIVE_ENTRY));
     ht_set(directives, ".extern", itoa(DIRECTIVE_EXTERN));
 
-    registers = ht_create();
     ht_set(registers, "r0", itoa(REGISTER));
     ht_set(registers, "r1", itoa(REGISTER));
     ht_set(registers, "r2", itoa(REGISTER));
@@ -40,6 +55,7 @@ void symbols_init()
     ht_set(registers, "r5", itoa(REGISTER));
     ht_set(registers, "r6", itoa(REGISTER));
     ht_set(registers, "r7", itoa(REGISTER));
+    
 }
 
 int is_operation(char *str)
