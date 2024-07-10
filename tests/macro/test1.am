@@ -1,17 +1,7 @@
-dmacr    inc r2
-    mov A, r2
-endmacr
-mov
-
-
-
-
-m_macr
-
-dsjaklj
-
-inc r4
-mov A, r4
-
-inc r3
-mov A, r3
+MAIN:   add r3, LIST 
+LOOP:   prn #48
+        lea STR, r6
+        
+        cmp r3, #-6
+        bne END 
+        

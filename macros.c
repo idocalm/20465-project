@@ -3,243 +3,292 @@
 #include <string.h>
 #include <stddef.h>
 #include <ctype.h>
-#define MAX_LINE_SIZE 80
 
+#include "definitions.h"
 #include "macros.h"
 
 #include "syntax/helpers.h"
 #include "syntax/symbols.h"
 
-void trim_line(char *p_line)
-{
-    int i = 0;
-    while (!isspace(p_line[i]))
-    {
-        i++;
-    }
-    p_line[i] = '\0';
-}
-
-int get_word_length(char *p_line)
-{
-    int i = 0;
-    while (!isspace(p_line[i]))
-    {
-        i++;
-    }
-    return i;
-}
-
-char *get_word(char *p_line)
-{
-    int wordLength = get_word_length(p_line);
-    char *p_word = (char *)safe_malloc(wordLength);
-    int i = 0;
-    for (; i < wordLength; i++)
-    {
-        p_word[i] = p_line[i];
-    }
-    p_word[i] = '\0';
-    return p_word;
-}
-
-int find_end_of_line(char *p_line)
-{
-    int i = 0;
-    while (p_line[i] != '\0')
-    {
-        i++;
-    }
-    return i;
-}
-
-int find_macro_name_length(char *p_line)
-{
-    int i = 0;
-    while (!isspace(p_line[i]))
-    {
-        i++;
-    }
-    return i;
-}
-
-char *find_macro_name(char **pp_line)
-{
-    int macroNameLength = find_macro_name_length(*pp_line);
-    char *p_macroName = (char *)safe_malloc(macroNameLength);
-    int i = 0;
-    while (!isspace(**pp_line))
-    {
-        p_macroName[i++] = **pp_line;
-        (*pp_line)++;
-    }
-    p_macroName[i] = '\0';
-    p_macroName = safe_realloc(p_macroName, i + 1);
-    /* clearing the line */
-    skip_spaces(pp_line);
-    return p_macroName;
-}
-
-void macros_exit_with_clean(ht_t *p_macros, char *p_macroName, char *p_macroValue, char *p_newFileName, FILE *p_file, FILE *p_newFile) {
-    safe_free(p_macroName);
-    safe_free(p_macroValue);
-    safe_free(p_newFileName);
-    ht_free(p_macros);
-    close_file(p_file);
-    close_file(p_newFile);
-}
-
-
-MacroResult *replace_macros(const char *p_fileName)
-{
-    int lineCount = 0;
-    ht_t *p_macros = ht_create();
-    char *p_line = NULL;
-    char line[MAX_LINE_SIZE];
-    char *p_macroName = NULL;
-    char *p_macroValue = NULL;
-    char *p_newFileName = NULL;
-    char *p_macroValueGet = NULL;
+void extract_file_content(const char *p_fileName, char **pp_content) {
     FILE *p_file = NULL;
-    FILE *p_newFile = NULL;
-    int isInMacro = 0;
-    MacroResult *result = NULL;
+    long length;
 
-    log_info("Searching for macros in file %s\n", p_fileName);
     p_file = open_file(p_fileName, "r");
 
-    result = safe_malloc(sizeof(MacroResult));
-    result->error = NO_ERROR;
-    result->macros = p_macros;
+    fseek(p_file, 0, SEEK_END);
+    length = ftell(p_file);
+    rewind(p_file);
 
-     /* creating new file */
-    p_newFileName = (char *)safe_malloc(strlen(p_fileName));
-    strcpy(p_newFileName, p_fileName);
-    p_newFileName[strlen(p_newFileName) - 1] = 'm';
-    p_newFile = open_file(p_newFileName, "w");
+    *pp_content = (char *)safe_malloc(length + 1);
 
-    /* -----------------*/
+    fread(*pp_content, 1, length, p_file);
+    (*pp_content)[length] = '\0';
 
-    while (fgets(line, MAX_LINE_SIZE, p_file) != NULL)
-    {
-        lineCount++;
-        p_line = line;
+    close_file(p_file);
+}
 
-        /* Skip any spaces at the beginning of the line */
-        skip_spaces(&p_line);
-        /* skip blank line */
-        if (*p_line == '\0' || is_comment(p_line))
-        {
-            fprintf(p_newFile, "\n");
-            continue;
-        }
+MacroErrors handle_macros(const char *p_fileName) {
+    ht_t *p_macros = ht_create();
+    char *fileContent = NULL;
+    MacroErrors res; 
 
-        /* Check if the line starts with the macro start prefix */
-        if (!isInMacro && is_macro_start(p_line))
-        {
+    extract_file_content(p_fileName, &fileContent);
+    res = extract_macros(fileContent, p_macros);
+    if (res != NO_ERROR) {
+        return res;
+    } 
 
-            /* Skip the macro start prefix */
-            p_line += MACRO_START_PREFIX_LEN;
+    char *content = replace_macros(fileContent, p_macros);
+   
+    /* Write the content to a new file */
+    char *newFileName = (char *)safe_malloc(strlen(p_fileName));
+    strcpy(newFileName, p_fileName);
+    newFileName[strlen(p_fileName) - 1] = 'm';
+    FILE *p_file = open_file(newFileName, "w");
 
-            /* Skip any spaces after the macro start prefix */
-            skip_spaces(&p_line);
+    fprintf(p_file, "%s", content);
 
+    close_file(p_file);
+    safe_free(content);
 
-            /* Create a new char array to store the macro name, which will be the first word in the line */
-            p_macroName = find_macro_name(&p_line);
-
-
-            /* Skip any spaces after the macro name */
-            skip_spaces(&p_line);
+    return NO_ERROR;
+}
 
 
-            /* Check that the name is not an operation or a register */
-            if (is_operation(p_macroName) || is_register(p_macroName) || is_directive(p_macroName))
-            {
-                
-                log_error("Invalid macro name: %s\n\tLine %d: Macro name is a reserved token: %s\n", p_macroName, lineCount, p_macroName);
-                result->error = INVALID_MACRO_NAME;
-                macros_exit_with_clean(p_macros, p_macroName, p_macroValue, p_newFileName, p_file, p_newFile);
-                return result;
+char *replace_macros(const char *fileContent, ht_t *p_macros) {
+
+    char *currentLine = NULL;
+    const char *nextLine = NULL;
+    int insideMacro = 0;
+    char *resultContent = NULL;
+
+
+    currentLine = (char *) safe_malloc(strlen(fileContent));
+    strcpy(currentLine, fileContent);
+
+    /* add a \n at the end of the file */
+    currentLine[strlen(fileContent)] = '\n';
+   
+    resultContent = (char *) safe_malloc(strlen(fileContent) + 1);
+    resultContent[0] = '\0';
+    
+
+    while (currentLine && ((nextLine = strchr(currentLine, '\n')) != NULL)) {
+
+        size_t lineLength = nextLine - currentLine;
+        char *line = (char *) safe_malloc(lineLength + 1);
+        strncpy(line, currentLine, lineLength);
+        line[lineLength] = '\0';
+
+        if (insideMacro) {
+            char *endPtr = line;
+            while (*endPtr && isspace(*endPtr)) endPtr++;
+            if (strncmp(endPtr, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
+                insideMacro = 0;
             }
+        } else {
+
+            char *startPtr = line;
+            while (*startPtr && isspace(*startPtr)) startPtr++;
+            if (strncmp(startPtr, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 
+                && isspace(startPtr[strlen(MACRO_START_PREFIX)])) {
+                insideMacro = 1;
+            } else {
+
+                char *linePtr = line;
+
+                while (*linePtr) {
+                    char *startPtr = linePtr;
+                    while (*startPtr && !isspace(*startPtr)) {
+                        startPtr++;
+                    }
+
+                    char *word = (char *) safe_malloc(startPtr - linePtr + 1);
+                    strncpy(word, linePtr, startPtr - linePtr);
+                    word[startPtr - linePtr] = '\0';
 
 
-            /* Check if there are any extra characters after the macro name */
-            if (strlen(p_line) > 0 && !is_comment(p_line))
-            {
-                log_error("Extra characters after macro name\n\tLine %d: unexpected token: %s\n", lineCount, p_line);
-                result->error = EXTRANEOUS_CHARACTERS;
-                macros_exit_with_clean(p_macros, p_macroName, p_macroValue, p_newFileName, p_file, p_newFile);
-                return result;
-            }
+                    /* Check if the word is a macro */
+                    char *macroContent = ht_get(p_macros, word);
 
+                    
 
-            /* Check if the macro is already defined */
-            if (ht_get(p_macros, p_macroName) != NULL)
-            {
-                log_error("Multiple macro definitions\n\tLine %d: Macro %s is already defined\n", lineCount, p_macroName);
-                result->error = MULTIPLE_MACRO_DEFINITIONS;
-                macros_exit_with_clean(p_macros, p_macroName, p_macroValue, p_newFileName, p_file, p_newFile);
-                return result;
-            }   
+                    if (macroContent) {
+                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 1);
+                        resultContent[strlen(resultContent)] = '\n';
 
+                        
+                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(macroContent) + 1);
+                        strcat(resultContent, macroContent);
+                    } else {
 
-            isInMacro = 1;
-            continue;
-        }
-        if (isInMacro && !is_macro_end(p_line))
-        {
-            int lineLength = find_end_of_line(p_line);
-            if (p_macroValue == NULL)
-            {
-                p_macroValue = (char *)safe_malloc(lineLength);
-                strcpy(p_macroValue, p_line);
-            }
-            else
-            {
-                p_macroValue = (char *)safe_realloc(p_macroValue, strlen(p_macroValue) + lineLength);
-                strcat(p_macroValue, p_line);
-            }
-            continue;
-        }
-        if (isInMacro && is_macro_end(p_line))
-        {
-            p_macroValue[strlen(p_macroValue)] = '\0';
-            ht_set(p_macros, p_macroName, p_macroValue);
-            isInMacro = 0;
-            safe_free(p_macroValue);
-            safe_free(p_macroName);
-            p_macroValue = NULL;
-            p_macroName = NULL;
-            continue;
-        }
-        if (!isInMacro)
-        {
-            char *word = get_word(p_line);
-            if (!is_operation(word))
-            {
-                trim_line(p_line);
-                p_macroValueGet = ht_get(p_macros, p_line);
-                
-                if (p_macroValueGet != NULL)
-                {
-                    fprintf(p_newFile, "%s", p_macroValueGet);
+                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(word) + 1);
+                        strcat(resultContent, word);
+                    }
+
+                    safe_free(word);
+
+                    /* Skip any spaces between the word and the next word */
+                    linePtr = startPtr;
+
+                    while (*linePtr && isspace(*linePtr) && *linePtr != '\n' && *linePtr != EOF) {
+                        size_t spaces = 0;
+                        char *startSpaces = linePtr;
+                        /* Count the number of spaces we'd need to skip */
+                        while (*startSpaces && isspace(*startSpaces)) {
+                            spaces++;
+                            startSpaces++;
+                        }
+
+                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + spaces + 1);
+                        strncat(resultContent, linePtr, spaces);
+                        linePtr += spaces;
+                    }
+                    
                 }
-                else
-                {
-                    log_warning("An invalid macro name was found: %s at line %d\n", p_line, lineCount);
-                    fprintf(p_newFile, "%s", line);
+
+                /* Add a new line to the result */
+                resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 2);
+                strcat(resultContent, "\n");
+
+            }
+
+        }
+
+
+        safe_free(line);
+        currentLine = nextLine + 1;
+    }
+
+    /* Remove the last \n */
+    resultContent[strlen(resultContent) - 1] = '\0';
+
+    return resultContent;
+}
+
+
+MacroErrors extract_macros(const char *fileContent, ht_t *p_macros) {
+    int lineNum = 1;
+    const char *currentLine = fileContent;
+    const char *nextLine = NULL;
+    char *macroName = NULL;
+    char *macroContent = NULL;
+    int insideMacro = 0;
+    size_t macroContentSize = 0;
+
+    while (currentLine) {
+        nextLine = strchr(currentLine, '\n');
+        if (nextLine) {
+            size_t lineLength = nextLine - currentLine;
+            char *line = (char *)safe_malloc(lineLength + 1);
+            strncpy(line, currentLine, lineLength);
+            line[lineLength] = '\0';
+
+            char *linePtr = NULL;
+
+            if (insideMacro) {
+                if ((linePtr = strstr(line, MACRO_END_PREFIX)) != NULL) {
+                    insideMacro = 0;
+                    macroContent = (char *)safe_realloc(macroContent, macroContentSize + lineLength + 2);
+
+                    /* Copy the line until the end of the macro */
+
+
+                    strncat(macroContent, line, linePtr - line);
+                    strcat(macroContent, "\n");
+                    macroContentSize += lineLength + 1;
+                    
+                    ht_set(p_macros, macroName, macroContent);
+                    safe_free(macroName);
+                    macroName = NULL;
+                    macroContent = NULL;
+                    macroContentSize = 0;
+                } else {
+                    macroContent = (char *)safe_realloc(macroContent, macroContentSize + lineLength + 2);
+
+                    
+                    strcat(macroContent, line);
+                    strcat(macroContent, "\n");
+                    macroContentSize += lineLength + 1;
                 }
+            } else if ((linePtr = strstr(line, MACRO_START_PREFIX)) != NULL) {
+                insideMacro = 1;
+
+
+                macroName = (char *)safe_malloc(lineLength - MACRO_START_PREFIX_LEN);
+                linePtr += MACRO_START_PREFIX_LEN; 
+                
+                /* Skip any spaces between the perfix and the macro name */
+                skip_spaces(&linePtr);
+
+
+                /* Copy the macro name until the first space */
+                int i, j;
+                for (i = 0, j = 0; i < lineLength; i++) {
+                    if (isspace(linePtr[i])) {
+                        break;
+                    }
+
+                    macroName[j++] = linePtr[i];
+                }                                    
+
+                macroName[j] = '\0';
+
+                if (strlen(macroName) <= 0) {
+                    log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", lineNum);
+                    safe_free(line);
+                    safe_free(macroName);
+                    safe_free(macroContent);
+                    return NO_MACRO_NAME;
+                }
+
+
+
+
+                macroName = (char *)safe_realloc(macroName, strlen(macroName));                                           
+
+                
+            
+                if (ht_get(p_macros, macroName) != NULL) {
+                    log_error("Multiple macro definitions in line %d\n\t Macro %s is already defined\n", lineNum, macroName);
+                    safe_free(line);
+                    safe_free(macroName);
+                    safe_free(macroContent);
+                    return MULTIPLE_MACRO_DEFINITIONS;
+                }
+
+                Operation op = get_operation(macroName);
+                Register reg = get_register(macroName);
+                Directive dir = get_directive(macroName);
+
+                if (op != UNKNOWN_OPERATION || reg != UNKNOWN_REGISTER || dir != UNKNOWN_DIRECTIVE) {
+                    log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", lineNum, macroName);
+                    safe_free(line);
+                    safe_free(macroName);
+                    safe_free(macroContent);
+                    return INVALID_MACRO_NAME;
+                }
+
+                macroContent = (char *)safe_malloc(1);
+                macroContent[0] = '\0';
+                macroContentSize = 0;
             }
-            else
-            {
-                fprintf(p_newFile, "%s", line);
-            }
-            safe_free(word);
+
+            safe_free(line);
+            currentLine = nextLine + 1;
+            lineNum++;
+        } else {
+            break;
         }
     }
 
-    log_info("Done searching for macros in file %s\n", p_fileName);
-    return result;
+    return NO_ERROR;
 }
+
+
+
+
+
+
 

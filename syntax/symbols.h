@@ -1,39 +1,21 @@
 #ifndef SYMBOLS_H
 #define SYMBOLS_H
-#include <stdio.h>
 
+#include "../definitions.h"
 
-enum ESYMBOLS
-{
-    UNKNOWN,
-    OPCODE_MOV,
-    OPCODE_CMP,
-    OPCODE_ADD,
-    OPCODE_SUB,
-    OPCODE_LEA,
-    OPCODE_CLR,
-    OPCODE_NOT,
-    OPCODE_INC,
-    OPCODE_DEC,
-    OPCODE_JMP,
-    OPCODE_BNE,
-    OPCODE_RED,
-    OPCODE_PRN,
-    OPCODE_JSR,
-    OPCODE_RTS,
-    OPCODE_STOP,
-    DIRECTIVE_DATA,
-    DIRECTIVE_STRING,
-    DIRECTIVE_ENTRY,
-    DIRECTIVE_EXTERN,
-    REGISTER
-};
+typedef struct {
+    char *name;
+    Operation operation;
+} operation_search;
 
+typedef struct {
+    char *name;
+    Directive directive;
+} directive_search;
 
-
-int is_operation(char *str);
-int is_directive(char *str);
-int is_register(char *str);
+Operation get_operation(char *str);
+Directive get_directive(char *str);
+Register get_register(char *str);
 
 void symbols_init();
 void symbols_free();

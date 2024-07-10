@@ -2,80 +2,87 @@
 
 #include <stddef.h>
 #include <string.h>
-
+#include <stdio.h>
+#include <ctype.h>
 
 #include "symbols.h"
-#include "../structs/hash_table.h"
-#include "../syntax/helpers.h"
 
-ht_t *operations, *directives, *registers;
 
-char *itoa(int num)
-{
-    int length = snprintf(NULL, 0, "%d", num);
-    char *str = (char *) safe_malloc(length + 1);
-    snprintf(str, length + 1, "%d", num);
-    return str;
-}
-
-void symbols_init()
+Operation get_operation(char *str)
 {
     
-    operations = ht_create();
-    directives = ht_create();
-    registers = ht_create();
+    operation_search operations[] = {
+        {"mov", MOV},
+        {"cmp", CMP},
+        {"add", ADD},
+        {"sub", SUB},
+        {"not", NOT},
+        {"clr", CLR},
+        {"lea", LEA},
+        {"inc", INC},
+        {"dec", DEC},
+        {"jmp", JMP},
+        {"bne", BNE},
+        {"red", RED},
+        {"prn", PRN},
+        {"jsr", JSR},
+        {"rts", RTS},
+        {"stop", STOP}
+    };
 
-    ht_set(operations, "mov", itoa(OPCODE_MOV));
-    ht_set(operations, "cmp", itoa(OPCODE_CMP));
-    ht_set(operations, "add", itoa(OPCODE_ADD));
-    ht_set(operations, "sub", itoa(OPCODE_SUB));
-    ht_set(operations, "not", itoa(OPCODE_NOT));
-    ht_set(operations, "clr", itoa(OPCODE_CLR));
-    ht_set(operations, "lea", itoa(OPCODE_LEA));
-    ht_set(operations, "inc", itoa(OPCODE_INC));
-    ht_set(operations, "dec", itoa(OPCODE_DEC));
-    ht_set(operations, "jmp", itoa(OPCODE_JMP));
-    ht_set(operations, "bne", itoa(OPCODE_BNE));
-    ht_set(operations, "red", itoa(OPCODE_RED));
-    ht_set(operations, "prn", itoa(OPCODE_PRN));
-    ht_set(operations, "jsr", itoa(OPCODE_JSR));
-    ht_set(operations, "rts", itoa(OPCODE_RTS));
-    ht_set(operations, "stop", itoa(OPCODE_STOP));
 
-    ht_set(directives, ".data", itoa(DIRECTIVE_DATA));
-    ht_set(directives, ".string", itoa(DIRECTIVE_STRING));
-    ht_set(directives, ".entry", itoa(DIRECTIVE_ENTRY));
-    ht_set(directives, ".extern", itoa(DIRECTIVE_EXTERN));
+    int i = 0;
 
-    ht_set(registers, "r0", itoa(REGISTER));
-    ht_set(registers, "r1", itoa(REGISTER));
-    ht_set(registers, "r2", itoa(REGISTER));
-    ht_set(registers, "r3", itoa(REGISTER));
-    ht_set(registers, "r4", itoa(REGISTER));
-    ht_set(registers, "r5", itoa(REGISTER));
-    ht_set(registers, "r6", itoa(REGISTER));
-    ht_set(registers, "r7", itoa(REGISTER));
+    for (; i < sizeof(operations) / sizeof(operation_search); i++)
+    {
+        if (strcmp(str, operations[i].name) == 0)
+        {
+            return operations[i].operation;
+        }
+    }
+
+    return UNKNOWN_OPERATION;
+
     
 }
 
-int is_operation(char *str)
+Directive get_directive(char *str)
 {
-    return ht_get(operations, str) != NULL;
+    directive_search directives[] = {
+        {".data", DATA},
+        {".string", STRING},
+        {".entry", ENTRY},
+        {".extern", EXTERN}
+    };
+
+    int i = 0;
+
+    for (; i < sizeof(directives) / sizeof(directive_search); i++)
+    {
+        if (strcmp(str, directives[i].name) == 0)
+        {
+            return directives[i].directive;
+        }
+    }
+
+
+    return UNKNOWN_DIRECTIVE;
 }
 
-int is_directive(char *str)
+Register get_register(char *str)
 {
-    return ht_get(directives, str) != NULL;
-}
+    if (strlen(str) != 3)
+    {
+        return UNKNOWN_REGISTER;
+    }
 
-int is_register(char *str)
-{
-    return ht_get(registers, str) != NULL;
-}
+    /* Check that the string is 2 characters long, with 'r' as the first character and then a digit */
+    if (str[0] == 'r' && isdigit(str[1]) && str[2] == '\0')
+    {
+        int digit = str[1] - '0'; /* Convert the digit from ASCII to an integer */
+        return digit >= 0 && digit <= 7 ? digit : UNKNOWN_REGISTER;
+ 
+    }
 
-void symbols_free()
-{
-    ht_free(operations);
-    ht_free(directives);
-    ht_free(registers);
+    return UNKNOWN_REGISTER;
 }
