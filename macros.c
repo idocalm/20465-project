@@ -10,6 +10,13 @@
 #include "syntax/helpers.h"
 #include "syntax/symbols.h"
 
+
+void skip_non_spaces(char **pp_line) {
+    while (**pp_line && !isspace(**pp_line)) {
+        (*pp_line)++;
+    }
+}
+
 void extract_file_content(const char *p_fileName, char **pp_content) {
     FILE *p_file = NULL;
     long length;
@@ -30,39 +37,61 @@ void extract_file_content(const char *p_fileName, char **pp_content) {
 
 MacroErrors handle_macros(const char *p_fileName) {
     ht_t *p_macros = ht_create();
-    char *fileContent = NULL;
+    char *p_fileContent = NULL;
     MacroErrors res; 
+    char *p_content; 
+    char *p_newFileName;
+    FILE *p_amFile; 
 
-    extract_file_content(p_fileName, &fileContent);
-    res = extract_macros(fileContent, p_macros);
+    extract_file_content(p_fileName, &p_fileContent);
+    res = extract_macros(p_fileContent, p_macros);
     if (res != NO_ERROR) {
         return res;
     } 
 
-    char *content = replace_macros(fileContent, p_macros);
+    p_content = replace_macros(p_fileContent, p_macros);
    
     /* Write the content to a new file */
-    char *newFileName = (char *)safe_malloc(strlen(p_fileName));
-    strcpy(newFileName, p_fileName);
-    newFileName[strlen(p_fileName) - 1] = 'm';
-    FILE *p_file = open_file(newFileName, "w");
+    p_newFileName = (char *)safe_malloc(strlen(p_fileName));
+    strcpy(p_newFileName, p_fileName);
+    p_newFileName[strlen(p_fileName) - 1] = 'm';
 
-    fprintf(p_file, "%s", content);
+    p_amFile = open_file(p_newFileName, "w");
 
-    close_file(p_file);
-    safe_free(content);
+    fprintf(p_amFile, "%s", p_content);
+
+    close_file(p_amFile);
+    safe_free(p_content);
 
     return NO_ERROR;
+}
+
+int handle_ignore_macros(char *p_line, int insideMacro) {
+    skip_spaces(&p_line);
+
+    if (insideMacro) {
+        if (strncmp(p_line, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0 && isspace(p_line[strlen(MACRO_END_PREFIX)])) {
+            return 0;
+        }
+    } else {
+        if (strncmp(p_line, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 && isspace(p_line[strlen(MACRO_START_PREFIX)])) {
+            return 1;
+        }
+
+    }
+
+    return insideMacro;
 }
 
 
 char *replace_macros(const char *fileContent, ht_t *p_macros) {
 
     char *currentLine = NULL;
-    const char *nextLine = NULL;
+    char *nextLine = NULL;
     int insideMacro = 0;
+    int isNextLineMacro = 0;
     char *resultContent = NULL;
-
+    char *word = NULL;
 
     currentLine = (char *) safe_malloc(strlen(fileContent));
     strcpy(currentLine, fileContent);
@@ -74,91 +103,85 @@ char *replace_macros(const char *fileContent, ht_t *p_macros) {
     resultContent[0] = '\0';
     
 
-    while (currentLine && ((nextLine = strchr(currentLine, '\n')) != NULL)) {
+    while (currentLine && ((nextLine = strchr(currentLine, '\n')) != NULL)) 
+    {
 
         size_t lineLength = nextLine - currentLine;
         char *line = (char *) safe_malloc(lineLength + 1);
         strncpy(line, currentLine, lineLength);
         line[lineLength] = '\0';
 
-        if (insideMacro) {
-            char *endPtr = line;
-            while (*endPtr && isspace(*endPtr)) endPtr++;
-            if (strncmp(endPtr, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
-                insideMacro = 0;
-            }
-        } else {
+        isNextLineMacro = handle_ignore_macros(line, insideMacro);
 
-            char *startPtr = line;
-            while (*startPtr && isspace(*startPtr)) startPtr++;
-            if (strncmp(startPtr, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 
-                && isspace(startPtr[strlen(MACRO_START_PREFIX)])) {
-                insideMacro = 1;
-            } else {
+        if (!insideMacro && !isNextLineMacro) {
 
-                char *linePtr = line;
+            char *linePtr = line;
 
-                while (*linePtr) {
-                    char *startPtr = linePtr;
-                    while (*startPtr && !isspace(*startPtr)) {
-                        startPtr++;
-                    }
+            while (*linePtr) {
+                char *startPtr = linePtr;
 
-                    char *word = (char *) safe_malloc(startPtr - linePtr + 1);
-                    strncpy(word, linePtr, startPtr - linePtr);
-                    word[startPtr - linePtr] = '\0';
+                skip_non_spaces(&startPtr);
+
+                word = (char *) safe_malloc(startPtr - linePtr + 1);
+                strncpy(word, linePtr, startPtr - linePtr);
+                word[startPtr - linePtr] = '\0';
 
 
-                    /* Check if the word is a macro */
-                    char *macroContent = ht_get(p_macros, word);
+                /* Check if the word is a macro */
+
+                char *macroContent = ht_get(p_macros, word);
+
+                
+
+                if (macroContent) {
+                    resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 1);
+                    resultContent[strlen(resultContent)] = '\n';
 
                     
+                    resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(macroContent) + 1);
+                    strcat(resultContent, macroContent);
+                } else {
 
-                    if (macroContent) {
-                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 1);
-                        resultContent[strlen(resultContent)] = '\n';
-
-                        
-                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(macroContent) + 1);
-                        strcat(resultContent, macroContent);
-                    } else {
-
-                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(word) + 1);
-                        strcat(resultContent, word);
-                    }
-
-                    safe_free(word);
-
-                    /* Skip any spaces between the word and the next word */
-                    linePtr = startPtr;
-
-                    while (*linePtr && isspace(*linePtr) && *linePtr != '\n' && *linePtr != EOF) {
-                        size_t spaces = 0;
-                        char *startSpaces = linePtr;
-                        /* Count the number of spaces we'd need to skip */
-                        while (*startSpaces && isspace(*startSpaces)) {
-                            spaces++;
-                            startSpaces++;
-                        }
-
-                        resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + spaces + 1);
-                        strncat(resultContent, linePtr, spaces);
-                        linePtr += spaces;
-                    }
-                    
+                    resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + strlen(word) + 1);
+                    strcat(resultContent, word);
                 }
 
-                /* Add a new line to the result */
-                resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 2);
-                strcat(resultContent, "\n");
+                printf("Result: %s\n", resultContent);
 
+                safe_free(word);
+
+                /* Skip any spaces between the word and the next word */
+                linePtr = startPtr;
+
+
+                while (*linePtr && isspace(*linePtr)) {
+                    size_t spaces = 0;
+                    char *startSpaces = linePtr;
+                    
+                    /* Count the number of spaces we'd need to skip */
+                    while (*startSpaces && isspace(*startSpaces)) {
+                        spaces++;
+                        startSpaces++;
+                    }
+
+                    resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + spaces + 1);
+                    strncat(resultContent, linePtr, spaces);
+                    linePtr += spaces;
+                }
+                
             }
+
+            /* Add a new line to the result */
+            resultContent = (char *)safe_realloc(resultContent, strlen(resultContent) + 2);
+            strcat(resultContent, "\n");
 
         }
 
 
         safe_free(line);
+
         currentLine = nextLine + 1;
+        insideMacro = isNextLineMacro;
     }
 
     /* Remove the last \n */
@@ -176,6 +199,12 @@ MacroErrors extract_macros(const char *fileContent, ht_t *p_macros) {
     char *macroContent = NULL;
     int insideMacro = 0;
     size_t macroContentSize = 0;
+    char *linePtr = NULL;
+    int i, j;
+
+    Operation op;
+    Register reg;
+    Directive dir;
 
     while (currentLine) {
         nextLine = strchr(currentLine, '\n');
@@ -185,7 +214,7 @@ MacroErrors extract_macros(const char *fileContent, ht_t *p_macros) {
             strncpy(line, currentLine, lineLength);
             line[lineLength] = '\0';
 
-            char *linePtr = NULL;
+            linePtr = NULL;
 
             if (insideMacro) {
                 if ((linePtr = strstr(line, MACRO_END_PREFIX)) != NULL) {
@@ -224,8 +253,9 @@ MacroErrors extract_macros(const char *fileContent, ht_t *p_macros) {
 
 
                 /* Copy the macro name until the first space */
-                int i, j;
-                for (i = 0, j = 0; i < lineLength; i++) {
+                i = 0;
+                j = 0;
+                for (; i < lineLength; i++) {
                     if (isspace(linePtr[i])) {
                         break;
                     }
@@ -258,9 +288,9 @@ MacroErrors extract_macros(const char *fileContent, ht_t *p_macros) {
                     return MULTIPLE_MACRO_DEFINITIONS;
                 }
 
-                Operation op = get_operation(macroName);
-                Register reg = get_register(macroName);
-                Directive dir = get_directive(macroName);
+                op = get_operation(macroName);
+                reg = get_register(macroName);
+                dir = get_directive(macroName);
 
                 if (op != UNKNOWN_OPERATION || reg != UNKNOWN_REGISTER || dir != UNKNOWN_DIRECTIVE) {
                     log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", lineNum, macroName);

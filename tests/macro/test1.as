@@ -6,3 +6,5 @@ LOOP:   prn #48
         endmacr 
         lea STR, r6
         macro
+END:    stop
+LIST:   .data 6, -9, 15
