@@ -18,6 +18,11 @@ void yellow_text()
     printf("\033[0;33m");
 }
 
+void green_text()
+{
+    printf("\033[0;32m");
+}
+
 void reset_text()
 {
     printf("\033[0m");
@@ -33,6 +38,18 @@ void log_error(char *format, ...)
     va_end(args);
     reset_text();
 }
+
+void log_success(char *format, ...)
+{
+    va_list args;
+    green_text();
+    printf("[SUCCESS] ");
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    reset_text();
+}
+
 
 void log_warning(char *format, ...)
 {
@@ -53,6 +70,14 @@ void log_info(char *format, ...)
     vprintf(format, args);
     va_end(args);
 }
+
+void skip_non_spaces(char **pp_line) {
+    while (**pp_line && !isspace(**pp_line)) {
+        (*pp_line)++;
+    }
+}
+
+
 
 /* skip_spaces - move the pointer to the first non-space character */
 void skip_spaces(char **p)
@@ -116,20 +141,7 @@ void close_file(FILE *file)
     fclose(file);
 }
 
-int is_comment(char *p_line)
-{
-    return strncmp(p_line, COMMENT_PREFIX, COMMENT_PREFIX_LEN) == 0;
-}
 
-int is_macro_start(char *p_line)
-{
-    return strncmp(p_line, MACRO_START_PREFIX, MACRO_START_PREFIX_LEN) == 0;
-}
-
-int is_macro_end(char *p_line)
-{
-    return strncmp(p_line, MACRO_END_PREFIX, MACRO_END_PREFIX_LEN) == 0;
-}
 
 /* copy_string - takes a destination string and copies everything from the source WITHOUT remaining spaces */
 void copy_string_until_space(char *dest, const char *src)
@@ -141,5 +153,35 @@ void copy_string_until_space(char *dest, const char *src)
         i++;
         j++;
     }
+
+    dest[i] = '\0';
+
+
+
 }
 
+
+
+void extract_file_content(char *p_fileName, char **pp_content) {
+    FILE *p_file = NULL;
+    long length;
+
+    p_file = open_file(p_fileName, "r");
+
+    fseek(p_file, 0, SEEK_END);
+    length = ftell(p_file);
+    rewind(p_file);
+
+    *pp_content = (char *)safe_malloc(length + 1);
+
+    fread(*pp_content, 1, length, p_file);
+    (*pp_content)[length] = '\0';
+
+    close_file(p_file);
+}
+
+
+
+int non_character(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\0';
+}

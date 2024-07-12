@@ -7,8 +7,7 @@
 #define MACRO_START_PREFIX_LEN strlen(MACRO_START_PREFIX)
 #define MACRO_END_PREFIX "endmacr"
 #define MACRO_END_PREFIX_LEN strlen(MACRO_END_PREFIX)
-#define COMMENT_PREFIX ";"
-#define COMMENT_PREFIX_LEN strlen(COMMENT_PREFIX)
+#define COMMENT_PREFIX ';'
 
 typedef enum 
 {
@@ -18,17 +17,18 @@ typedef enum
     EXTRANEOUS_CHARACTERS,
     MACRO_NOT_FOUND,
     INVALID_FILE_EXTENSION,
-    NO_MACRO_NAME
+    NO_MACRO_NAME,
+    LINE_LENGTH_EXCEEDED
 } MacroErrors;
 
 
+int is_comment(char *p_line);
+int handle_ignore_macros(char *p_line, int insideMacro);
+void extract_file_content(char *p_fileName, char **pp_content);
+MacroErrors handle_macros(char *p_fileName);
+MacroErrors extract_macros(char *p_fileName, ht_t *p_macros);
 
-
-void extract_file_content(const char *p_fileName, char **pp_content);
-MacroErrors handle_macros(const char *p_fileName);
-MacroErrors extract_macros(const char *p_fileName, ht_t *p_macros);
-
-char *replace_macros(const char *content,  ht_t *p_macros);
+char *replace_macros(char *content,  ht_t *p_macros);
 
 
 #endif

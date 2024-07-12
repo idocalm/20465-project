@@ -1,10 +1,11 @@
-MAIN:   add r3, LIST 
+MAIN:   add r3, LIST              
 LOOP:   prn #48
         macr macro
-        cmp r3, #-6
-        bne END 
+        stop
         endmacr 
         lea STR, r6
         macro
 END:    stop
 LIST:   .data 6, -9, 15
+; This is a comment
+; This is another comment
