@@ -141,6 +141,31 @@ void close_file(FILE *file)
     fclose(file);
 }
 
+int is_empty(char *start, char *end) {
+    while (start < end) {
+        if (*start != ' ' && *start != '\t') {
+            return 0;  /* not empty */
+        }
+        start++;
+    }
+    return 1; /* empty */
+}
+
+void remove_all_spaces(char *p) {
+    char *p_start = p;
+    char *p_end = p + strlen(p) - 1;
+
+    while (isspace(*p_start)) {
+        p_start++;
+    }
+
+    while (isspace(*p_end)) {
+        p_end--;
+    }
+
+    strncpy(p, p_start, p_end - p_start + 1);
+    p[p_end - p_start + 1] = '\0';
+}
 
 
 /* copy_string - takes a destination string and copies everything from the source WITHOUT remaining spaces */
@@ -160,8 +185,6 @@ void copy_string_until_space(char *dest, const char *src)
 
 }
 
-
-
 void extract_file_content(char *p_fileName, char **pp_content) {
     FILE *p_file = NULL;
     long length;
@@ -179,7 +202,6 @@ void extract_file_content(char *p_fileName, char **pp_content) {
 
     close_file(p_file);
 }
-
 
 
 int non_character(char c) {

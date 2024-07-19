@@ -4,6 +4,15 @@
 #include "structs/linkedlist.h"
 #include "structs/hash_table.h"
 
-int first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image);
+typedef enum {
+    NO_FPASS_ERROR
+} FPassErrors;
+
+
+
+
+
+FPassErrors first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image, ht_t *p_macros);
+
 
 #endif 

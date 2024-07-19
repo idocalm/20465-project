@@ -11,8 +11,7 @@
 #include "syntax/symbols.h"
 
 
-MacroErrors handle_macros(char *p_fileName) {
-    ht_t *p_macros = ht_create();
+MacroErrors handle_macros(char *p_fileName, ht_t *p_macros) {
     char *p_fileContent = NULL;
     MacroErrors res; 
     char *p_content; 
@@ -21,7 +20,7 @@ MacroErrors handle_macros(char *p_fileName) {
 
     extract_file_content(p_fileName, &p_fileContent);
     res = extract_macros(p_fileContent, p_macros);
-    if (res != NO_ERROR) {
+    if (res != NO_MACRO_ERROR) {
         return res;
     } 
 
@@ -36,10 +35,11 @@ MacroErrors handle_macros(char *p_fileName) {
 
     fprintf(p_amFile, "%s", p_content);
 
+    ht_free(p_macros);
     close_file(p_amFile);
     safe_free(p_content);
 
-    return NO_ERROR;
+    return NO_MACRO_ERROR;
 }
 
 int handle_ignore_macros(char *p_line, int insideMacro) {
@@ -187,6 +187,7 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
     int insideMacro = 0;
     size_t macroContentSize = 0;
     char *linePtr = NULL;
+    char *line = NULL;
 
     Operation op;
     Register reg;
@@ -210,7 +211,7 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
             return LINE_LENGTH_EXCEEDED;
         }
 
-        char *line = (char *)safe_malloc(lineLength + 1);
+        line = (char *)safe_malloc(lineLength + 1);
         strncpy(line, currentLine, lineLength);
         line[lineLength] = '\0';
 
@@ -218,6 +219,7 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
 
         if (insideMacro) {
             if ((linePtr = strstr(line, MACRO_END_PREFIX)) != NULL) {
+               
                
                 insideMacro = 0;
                 macroContent = (char *)safe_realloc(macroContent, macroContentSize + lineLength);
@@ -241,7 +243,16 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
                 strcat(macroContent, line);
                 macroContentSize += lineLength; 
             }
-        } else if ((linePtr = strstr(line, MACRO_START_PREFIX)) != NULL && non_character(linePtr[MACRO_START_PREFIX_LEN])) {
+        } else if ((linePtr = strstr(line, MACRO_START_PREFIX)) != NULL) {
+
+            /* Check if the macro definition is valid */
+            char *afterDef = linePtr + MACRO_START_PREFIX_LEN;
+            if (!isspace(*afterDef)) {
+                currentLine = nextLine + 1;
+                lineNum++;
+                continue; 
+            }
+
             insideMacro = 1;
 
             macroName = (char *)safe_malloc(lineLength - MACRO_START_PREFIX_LEN - 1);
@@ -255,6 +266,10 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
             copy_string_until_space(macroName, linePtr);    
 
 
+            /* TODO: Make sure there are no 
+                extraneous characters after definition and on ending line
+            */
+
 
             if (strlen(macroName) <= 0) {
                 log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", lineNum);
@@ -266,7 +281,6 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
 
             macroName = (char *)safe_realloc(macroName, strlen(macroName));     
 
-        
             if (ht_get(p_macros, macroName) != NULL) {
                 log_error("Multiple macro definitions in line %d\n\t Macro %s is already defined\n", lineNum, macroName);
                 safe_free(line);
@@ -302,7 +316,7 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
     }
 
 
-    return NO_ERROR;
+    return NO_MACRO_ERROR;
 }
 
 

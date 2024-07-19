@@ -3,8 +3,6 @@
 #include "hash_table.h"
 #include "../syntax/helpers.h"
 
-
-
 unsigned int hash(const char *key)
 {
     unsigned long int value = 0;
@@ -80,16 +78,23 @@ void ht_set(ht_t *hashtable, const char *key, const char *value)
     prev->next = ht_pair(key, value);
 }
 
+
 char *ht_get(ht_t *hashtable, const char *key)
 {
+
+
     unsigned int slot = hash(key);
 
+    
+
     entry_t *entry = hashtable->entries[slot];
+
 
     if (entry == NULL)
     {
         return NULL;
     }
+
 
     while (entry != NULL)
     {

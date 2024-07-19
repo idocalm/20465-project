@@ -6,6 +6,7 @@
 #include "syntax/symbols.h"
 #include "macros.h"
 #include "first_pass.h"
+#include "definitions.h"
 
 #define INITIAL_IC_VALUE 100
 
@@ -16,10 +17,12 @@ int process_file(char *p_fileName) {
 
     ht_t *p_data_image = ht_create();
     ht_t *p_code_image = ht_create();
+    ht_t *p_macros = ht_create();
+
     
 
-    int res = handle_macros(p_fileName);
-    if (res != NO_ERROR)
+    int res = handle_macros(p_fileName, p_macros);
+    if (res != NO_MACRO_ERROR)
     {
         log_error("Error in file during pre-processor (Skipping) %s: with code: %d\n", p_fileName, res);
         return res;
@@ -27,7 +30,8 @@ int process_file(char *p_fileName) {
 
     log_success("Pre-processor finished successfully for file %s\n", p_fileName);
 
-    first_pass(p_fileName, &ic, &dc, p_data_image, p_code_image);
+    
+    first_pass(p_fileName, &ic, &dc, p_data_image, p_code_image, p_macros);
 
     
 

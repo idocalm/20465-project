@@ -11,7 +11,7 @@
 
 typedef enum 
 {
-    NO_ERROR,
+    NO_MACRO_ERROR,
     MULTIPLE_MACRO_DEFINITIONS,
     INVALID_MACRO_NAME,
     EXTRANEOUS_CHARACTERS,
@@ -25,7 +25,7 @@ typedef enum
 int is_comment(char *p_line);
 int handle_ignore_macros(char *p_line, int insideMacro);
 void extract_file_content(char *p_fileName, char **pp_content);
-MacroErrors handle_macros(char *p_fileName);
+MacroErrors handle_macros(char *p_fileName, ht_t *p_macros);
 MacroErrors extract_macros(char *p_fileName, ht_t *p_macros);
 
 char *replace_macros(char *content,  ht_t *p_macros);

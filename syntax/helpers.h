@@ -9,10 +9,12 @@ void log_success(char *format, ...);
 void log_info(char *format, ...);
 void skip_spaces(char **p);
 void *safe_malloc(size_t size);
+int is_empty(char *start, char *end);
 void *safe_realloc(void *ptr, size_t size);
 void safe_free(void *ptr);
 FILE *open_file(const char *filename, char *mode);
 void close_file(FILE *file);
+void remove_all_spaces(char *line);
 void copy_string_until_space(char *dest, const char *src);
 
 void skip_non_spaces(char **p);

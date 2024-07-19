@@ -3,79 +3,73 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <ctype.h>
+
 #include "definitions.h"
 
+#include "syntax/commands.h"
 #include "syntax/helpers.h"
 
-char* is_label(char *p) {
-    char *p_label = NULL;
 
-    
-    int i = 0;
-    int j = 0;
-    p_label = safe_malloc(strlen(p));
-
-    while (p[i] != '\0' && p[i] != EOF && p[i] != '\n' && p[i] != ':')
-    {
-        p_label[j] = p[i];
-        i++;
-        j++;
-    }
-    if (*p == ':')
-    {
-        p_label[j] = '\0';
-        p_label = safe_realloc(p_label, strlen(p_label));
-        return p_label;
-    }
-    return NULL;
-
-}
-
-int first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image)
+FPassErrors first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image, ht_t *p_macros)
 {
-    FILE *p_file = NULL;
 
-    int lineCount = 0;
-    char line[MAX_LINE_SIZE];
-    char *p_line = NULL;
+
+    char *p_currentLine = (char *)safe_malloc(MAX_LINE_SIZE);
+    char *p_line = p_currentLine; 
+    FILE *p_file = open_file(p_fileName, "r");
+    char *pp_instructions[] = {
+        ".data",
+        ".string",
+        ".entry",
+        ".extern"
+    };
+    int lineNum = 0;
+    int i = 0;
+    int found_line_type = 0;
+
 
     log_info("Intialized first pass in file %s\n", p_fileName);
 
-    p_file = open_file(p_fileName, "r");
 
-    while (fgets(line, MAX_LINE_SIZE, p_file) != NULL)
+
+
+    while (fgets(p_currentLine, MAX_LINE_SIZE, p_file) != NULL)
     {
-        /* TODO: Check if the line is too long */
-
-        lineCount++;
-        p_line = line;
-
-        /* Skip any spaces at the beginning of the line */
+        lineNum++;
+        p_line = p_currentLine;
+        found_line_type = 0;
         skip_spaces(&p_line);
-        
-        /* skip blank line */
-        if (*p_line == '\0')
+
+        /* check if the line is empty */
+        if (*p_line == '\0' || *p_line == '\n')
         {
             continue;
         }
 
-        /*
-        char *p_label = is_label(p_line);
 
-        if (p_label != NULL)
+        /* check if the line is a instruction */
+        for (i = 0; i < sizeof(pp_instructions) / sizeof(char *); i++)
         {
-            log_info("Found label: %s\n", p_label);
-            safe_free(p_label);
+            if (strstr(p_line, pp_instructions[i]) != NULL)
+            {
+                handle_instruction_line(p_line);
+                found_line_type = 1;
+                break;
+            }
         }
-*/
 
-        
+        if (found_line_type == 0)
+        {
+            handle_directive_line(p_line, lineNum, p_macros);
+        }
+
 
     }
 
-
-
+    safe_free(p_currentLine);
     close_file(p_file);
+    
 
     return 0;
     
