@@ -12,7 +12,7 @@ typedef enum {
 
 
 
-FPassErrors first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image, ht_t *p_macros);
+FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, ht_t *p_labels, ht_t *p_macros);
 
 
 #endif 

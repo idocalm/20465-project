@@ -5,13 +5,13 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "definitions.h"
+#include "globals.h"
 
 #include "syntax/commands.h"
-#include "syntax/helpers.h"
 
 
-FPassErrors first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_image, ht_t *p_code_image, ht_t *p_macros)
+
+FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, ht_t *p_labels, ht_t *p_macros)
 {
 
 
@@ -61,7 +61,7 @@ FPassErrors first_pass(char *p_fileName, long *p_ic, long *p_dc, ht_t *p_data_im
 
         if (found_line_type == 0)
         {
-            handle_directive_line(p_line, lineNum, p_macros);
+            handle_directive_line(p_line, lineNum, p_ic, p_labels, p_macros);
         }
 
 

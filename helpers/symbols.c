@@ -1,16 +1,18 @@
-#include <stdlib.h>
-
-#include <stddef.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
 #include "symbols.h"
 
+/*
+    ------- Symbols detection -------
+*/
+
+/**
+    * Finds responding operation to a given string (if exists).
+    * @param str - the string to search for.
+    * @return the operation that corresponds to the string.
+*/
 
 Operation get_operation(char *str)
 {
-    
+    int i;
     operation_search operations[] = {
         {"mov", MOV},
         {"cmp", CMP},
@@ -29,25 +31,35 @@ Operation get_operation(char *str)
         {"rts", RTS},
         {"stop", STOP}
     };
+    int length = sizeof(operations) / sizeof(operation_search);
 
 
-    int i = 0;
 
-    for (; i < sizeof(operations) / sizeof(operation_search); i++)
+    for (i = 0; i < length; i++)
     {
+        /* Check if the string is equal to the directive name */
         if (strcmp(str, operations[i].name) == 0)
         {
             return operations[i].operation;
         }
     }
 
+    /* Return not found */
+
     return UNKNOWN_OPERATION;
 
     
 }
 
+/**
+    * Finds responding directive to a given string (if exists).
+    * @param str - the string to search for.
+    * @return the directive that corresponds to the string.
+*/
+
 Directive get_directive(char *str)
 {
+    int i; 
     directive_search directives[] = {
         {".data", DATA},
         {".string", STRING},
@@ -55,23 +67,30 @@ Directive get_directive(char *str)
         {".extern", EXTERN}
     };
 
-    int i = 0;
+    int length = sizeof(directives) / sizeof(directive_search);
 
-    for (; i < sizeof(directives) / sizeof(directive_search); i++)
+
+    for (i = 0; i < length; i++)
     {
+        /* Check if the string is equal to the directive name */
         if (strcmp(str, directives[i].name) == 0)
         {
             return directives[i].directive;
         }
     }
 
-
+    /* Return not found */
     return UNKNOWN_DIRECTIVE;
 }
 
+/**
+    * Finds responding register to a given string (if exists).
+    * @param str - the string to search for.
+    * @return the register that corresponds to the string.
+*/
 Register get_register(char *str)
 {
-    if (strlen(str) != 3)
+    if (strlen(str) != 3)  /* TODO: why? */
     {
         return UNKNOWN_REGISTER;
     }

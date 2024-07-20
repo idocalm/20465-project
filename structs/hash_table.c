@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hash_table.h"
-#include "../syntax/helpers.h"
 
 unsigned int hash(const char *key)
 {
@@ -21,9 +20,9 @@ unsigned int hash(const char *key)
 
 entry_t *ht_pair(const char *key, const char *value)
 {
-    entry_t *entry = malloc(sizeof(entry_t) * 1);
-    entry->key = malloc(strlen(key) + 1);
-    entry->value = malloc(strlen(value) + 1);
+    entry_t *entry = safe_malloc(sizeof(entry_t) * 1);
+    entry->key = safe_malloc(strlen(key) + 1);
+    entry->value = safe_malloc(strlen(value) + 1);
 
     strcpy(entry->key, key);
     strcpy(entry->value, value);
@@ -36,9 +35,9 @@ entry_t *ht_pair(const char *key, const char *value)
 ht_t *ht_create(void)
 {
     int i = 0;
-    ht_t *hashtable = malloc(sizeof(ht_t) * 1);
+    ht_t *hashtable = safe_malloc(sizeof(ht_t) * 1);
 
-    hashtable->entries = malloc(sizeof(entry_t *) * HASH_TABLE_SIZE);
+    hashtable->entries = safe_malloc(sizeof(entry_t *) * HASH_TABLE_SIZE);
 
     for (; i < HASH_TABLE_SIZE; ++i)
     {
@@ -66,7 +65,7 @@ void ht_set(ht_t *hashtable, const char *key, const char *value)
         if (strcmp(entry->key, key) == 0)
         {
             free(entry->value);
-            entry->value = malloc(strlen(value) + 1);
+            entry->value = safe_malloc(strlen(value) + 1);
             strcpy(entry->value, value);
             return;
         }

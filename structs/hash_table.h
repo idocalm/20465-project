@@ -3,6 +3,9 @@
 
 #define HASH_TABLE_SIZE 100
 
+#include "../helpers/memory.h"
+#include "../helpers/strings.h"
+
 typedef struct entry_t
 {
     char *key;

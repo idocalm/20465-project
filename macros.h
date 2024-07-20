@@ -1,7 +1,15 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stddef.h>
+#include <ctype.h>
+
 #include "structs/hash_table.h"
+#include "globals.h"
+#include "helpers/symbols.h"
 
 #define MACRO_START_PREFIX "macr"
 #define MACRO_START_PREFIX_LEN strlen(MACRO_START_PREFIX)
@@ -12,7 +20,7 @@
 typedef enum 
 {
     NO_MACRO_ERROR,
-    MULTIPLE_MACRO_DEFINITIONS,
+    MULTIPLE_MACRO_globals,
     INVALID_MACRO_NAME,
     EXTRANEOUS_CHARACTERS,
     MACRO_NOT_FOUND,

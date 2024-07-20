@@ -1,14 +1,23 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stddef.h>
-#include <ctype.h>
-
-#include "definitions.h"
 #include "macros.h"
 
-#include "syntax/helpers.h"
-#include "syntax/symbols.h"
+void extract_file_content(char *p_fileName, char **pp_content) {
+    FILE *p_file = NULL;
+    long length;
+
+    p_file = open_file(p_fileName, "r");
+
+    fseek(p_file, 0, SEEK_END);
+    length = ftell(p_file);
+    rewind(p_file);
+
+    *pp_content = (char *)safe_malloc(length + 1);
+
+    fread(*pp_content, 1, length, p_file);
+    (*pp_content)[length] = '\0';
+
+    close_file(p_file);
+}
+
 
 
 MacroErrors handle_macros(char *p_fileName, ht_t *p_macros) {
@@ -56,11 +65,6 @@ int handle_ignore_macros(char *p_line, int insideMacro) {
     }
 
     return insideMacro;
-}
-
-int is_comment(char *p_line) {
-    skip_spaces(&p_line);
-    return *p_line == COMMENT_PREFIX; 
 }
 
 
@@ -282,11 +286,11 @@ MacroErrors extract_macros(char *fileContent, ht_t *p_macros) {
             macroName = (char *)safe_realloc(macroName, strlen(macroName));     
 
             if (ht_get(p_macros, macroName) != NULL) {
-                log_error("Multiple macro definitions in line %d\n\t Macro %s is already defined\n", lineNum, macroName);
+                log_error("Multiple macro globals in line %d\n\t Macro %s is already defined\n", lineNum, macroName);
                 safe_free(line);
                 safe_free(macroName);
                 safe_free(macroContent);
-                return MULTIPLE_MACRO_DEFINITIONS;
+                return MULTIPLE_MACRO_globals;
             }
 
             op = get_operation(macroName);

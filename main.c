@@ -2,21 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "syntax/helpers.h"
-#include "syntax/symbols.h"
+
 #include "macros.h"
 #include "first_pass.h"
-#include "definitions.h"
+#include "globals.h"
 
 #define INITIAL_IC_VALUE 100
 
 int process_file(char *p_fileName) {
 
-    long ic = INITIAL_IC_VALUE;
-    long dc = 0;
+    int ic = INITIAL_IC_VALUE;
+    int dc = 0;
 
-    ht_t *p_data_image = ht_create();
-    ht_t *p_code_image = ht_create();
+    ht_t *p_labels = ht_create();
     ht_t *p_macros = ht_create();
 
     
@@ -31,7 +29,7 @@ int process_file(char *p_fileName) {
     log_success("Pre-processor finished successfully for file %s\n", p_fileName);
 
     
-    first_pass(p_fileName, &ic, &dc, p_data_image, p_code_image, p_macros);
+    first_pass(p_fileName, &ic, &dc, p_labels,  p_macros);
 
     
 

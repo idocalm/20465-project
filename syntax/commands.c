@@ -1,11 +1,4 @@
 #include "commands.h"
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "helpers.h"
-#include "symbols.h"
 
 char *is_label(char *p) {
     
@@ -29,8 +22,6 @@ char *is_label(char *p) {
     return p_label;
 
 }
-
-
 
 void **get_operands(char *line, char **operands, int *operandsCount) {
     int i = 0;
@@ -68,7 +59,7 @@ OperationGroup get_operation_group(Operation op) {
 }
 
 
-void handle_directive_line(char *line, int lineNum, ht_t *p_macros) {
+void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, ht_t *p_macros) {
 
 
     char *label = NULL;
@@ -174,6 +165,9 @@ void handle_directive_line(char *line, int lineNum, ht_t *p_macros) {
             return;
         }
     }
+
+
+    /* Assign the label as the current IC value */
 
 
 

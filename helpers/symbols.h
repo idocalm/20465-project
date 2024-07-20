@@ -1,7 +1,13 @@
 #ifndef SYMBOLS_H
 #define SYMBOLS_H
 
-#include "../definitions.h"
+
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include "../globals.h"
 
 typedef struct {
     char *name;

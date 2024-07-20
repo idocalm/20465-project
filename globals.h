@@ -1,6 +1,6 @@
 
-#ifndef DEFINITIONS_H
-#define DEFINITIONS_H
+#ifndef globals_H
+#define globals_H
 
 
 #define MAX_LINE_SIZE 80
