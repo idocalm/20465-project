@@ -19,7 +19,7 @@ void skip_non_spaces(char **pp_line) {
 */
 void skip_spaces(char **p)
 {
-    while (isspace(**p))
+    while (**p != '\0' && isspace(**p))
     {
         (*p)++;
     }

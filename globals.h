@@ -27,7 +27,7 @@ typedef enum {
     RELATIVE = 2, /* Operand is a "pointer" */
     REGISTER = 3 /* Operand is a register */ 
 
-} AdressMode;
+} AddressMode;
 
 typedef enum {
     UNKNOWN_OPERATION = -1,

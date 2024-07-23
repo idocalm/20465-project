@@ -7,16 +7,17 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "../structs/list.h"
 
-#include "../structs/hash_table.h"
 #include "../globals.h"
 #include "../helpers/logs.h"
 #include "../helpers/symbols.h"
+#include "../helpers/strings.h"
 
 char *is_label(char *line);
-void **get_operands(char *line, char **operands, int *operandsCount);
+void get_operands(char *line, char **operands, int *operandsCount);
 OperationGroup get_operation_group(Operation op);
-void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, ht_t *p_macros);
+void handle_directive_line(char *line, int lineNum, int *p_ic, List *p_labels, List *p_macros, int isFirstWord); 
 void handle_instruction_line(char *line);
 
 #endif

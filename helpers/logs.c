@@ -22,6 +22,13 @@ void green_text()
     printf("\033[0;32m");
 }
 
+
+/* Changes the text color to blue */
+void blue_text()
+{
+    printf("\033[0;34m");
+}
+
 /* Resets the text color to default */
 void reset_text()
 {
@@ -92,4 +99,21 @@ void log_info(char *format, ...)
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
+}
+
+
+/**
+    * Logs a debug message to the console 
+    * @param format - the message (with format specifiers)
+    * @param ... - the arguments to be replaced in the format string
+ */
+void log_debug(char *format, ...)
+{
+    va_list args;
+    blue_text();
+    printf("[DEBUG] ");
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    reset_text();
 }

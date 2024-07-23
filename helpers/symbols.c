@@ -90,13 +90,13 @@ Directive get_directive(char *str)
 */
 Register get_register(char *str)
 {
-    if (strlen(str) != 3)  /* TODO: why? */
+    if (strlen(str) != 2) 
     {
         return UNKNOWN_REGISTER;
     }
 
     /* Check that the string is 2 characters long, with 'r' as the first character and then a digit */
-    if (str[0] == 'r' && isdigit(str[1]) && str[2] == '\0')
+    if (str[0] == 'r' && isdigit(str[1]))
     {
         int digit = str[1] - '0'; /* Convert the digit from ASCII to an integer */
         return digit >= 0 && digit <= 7 ? digit : UNKNOWN_REGISTER;
@@ -105,3 +105,6 @@ Register get_register(char *str)
 
     return UNKNOWN_REGISTER;
 }
+/*
+void update_addressing_mode(AddressMode *mode, 
+*/

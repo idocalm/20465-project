@@ -14,12 +14,13 @@ int process_file(char *p_fileName) {
     int ic = INITIAL_IC_VALUE;
     int dc = 0;
 
-    ht_t *p_labels = ht_create();
-    ht_t *p_macros = ht_create();
+    List *p_labels = list_create();
+    List *p_macros = list_create();
 
-    
 
     int res = handle_macros(p_fileName, p_macros);
+
+
     if (res != NO_MACRO_ERROR)
     {
         log_error("Error in file during pre-processor (Skipping) %s: with code: %d\n", p_fileName, res);
@@ -28,10 +29,16 @@ int process_file(char *p_fileName) {
 
     log_success("Pre-processor finished successfully for file %s\n", p_fileName);
 
-    
-    first_pass(p_fileName, &ic, &dc, p_labels,  p_macros);
+    /* Change the file to the .am file */
+    p_fileName[strlen(p_fileName) - 1] = 'm';
+
 
     
+    first_pass(p_fileName, &ic, &dc, p_labels, p_macros);
+
+    list_free(p_labels);
+    list_free(p_macros);
+
 
     return 0;
 }

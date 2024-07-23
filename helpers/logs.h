@@ -14,5 +14,6 @@ void log_error(char *format, ...);
 void log_warning(char *format, ...);
 void log_success(char *format, ...);
 void log_info(char *format, ...);
+void log_debug(char *format, ...);
 
 #endif

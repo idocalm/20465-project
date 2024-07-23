@@ -1,4 +1,4 @@
-#include "commands.h"
+#include "line_parser.h"
 
 char *is_label(char *p) {
     
@@ -23,7 +23,7 @@ char *is_label(char *p) {
 
 }
 
-void **get_operands(char *line, char **operands, int *operandsCount) {
+void get_operands(char *line, char **operands, int *operandsCount) {
     int i = 0;
     char *operand = NULL;
 
@@ -31,8 +31,7 @@ void **get_operands(char *line, char **operands, int *operandsCount) {
     while ((operand = strtok(line, ",")) != NULL) {
 
         if (i == MAX_OPERANDS + 1) {
-            return NULL;
-
+            return;
         }
 
         operands[i] = (char *) safe_malloc(strlen(operand));
@@ -59,7 +58,7 @@ OperationGroup get_operation_group(Operation op) {
 }
 
 
-void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, ht_t *p_macros) {
+void handle_directive_line(char *line, int lineNum, int *p_ic, List *p_labels, List *p_macros, int isFirstWord) {
 
 
     char *label = NULL;
@@ -77,6 +76,9 @@ void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, h
     /* #1 - Extract the label, if exists. */
 
     label = is_label(line);
+
+    printf("Label: %s\n", label);
+
     if (label != NULL) {
 
         /* check that there are no spaces between the label and the ':' and no more then one word */
@@ -100,13 +102,17 @@ void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, h
         }
 
 
-        
         /* 
             TODO: check that the label is not a macro, this caused an error.
         */ 
 
-        printf("Label: %s\n", label);
-        
+
+        if (list_get(p_labels, label) != NULL) {
+            log_error("Invalid label in line %d\n\tLabel: %s is already defined\n", lineNum, label);
+            safe_free(label);
+            return;
+        }
+
         /* check that the label is not too long */
         if (strlen(label) > MAX_LABEL_SIZE) {
             log_error("Label is too long in line %d\n\tLabel: %s. \n\tThe maximum length is %d while the label is %ld\n", lineNum, label, MAX_LABEL_SIZE, strlen(label));
@@ -116,17 +122,19 @@ void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, h
         line += strlen(label) + 1;
     } 
 
+
     skip_spaces(&line);
 
     /*
         #2 - Extract the operation name.
     */
 
-    operationName = (char *)safe_malloc(MAX_LINE_SIZE);
+    operationName = (char *) safe_malloc(MAX_LINE_SIZE);
     copy_string_until_space(operationName, line);
-    operationName = (char *)safe_realloc(operationName, strlen(operationName) + 1);
+    operationName = (char *) safe_realloc(operationName, strlen(operationName) + 1);
 
     op = get_operation(operationName);
+
 
     if (op == UNKNOWN_OPERATION) {
         log_error("Invalid operation name in line %d\n\tOperation name: %s at: ...%s\n", lineNum, operationName, line);
@@ -168,7 +176,14 @@ void handle_directive_line(char *line, int lineNum, int *p_ic, ht_t *p_labels, h
 
 
     /* Assign the label as the current IC value */
+    if (label != NULL) {
+        /*list_insert_integer(p_labels, label, *p_ic); */
+        printf("Setting label: %s to %d\n", label, *p_ic);
+        (*p_ic)++;
+    }
 
+    /* Increment the IC value */
+    (*p_ic) += opGroup;
 
 
 
