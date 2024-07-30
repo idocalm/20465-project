@@ -146,11 +146,6 @@ MacroErrors extract_macros(FILE *p_file, List *p_macros) {
 
     size_t macroContentSize = 0;
 
-    Operation op;
-    Register reg;
-    Directive dir;
-
-
     while (fgets(line, MAX_LINE_SIZE + 2, p_file) != NULL) 
     {
         p_line = line;
@@ -205,13 +200,9 @@ MacroErrors extract_macros(FILE *p_file, List *p_macros) {
                 }
 
 
-                /* Check if the macro name is a reserved word */
-                op = get_operation(macroName);
-                reg = get_register(macroName);
-                dir = get_directive(macroName);
                 
 
-                if (op != UNKNOWN_OPERATION || reg != UNKNOWN_REGISTER || dir != UNKNOWN_DIRECTIVE) {
+                if (is_reserved_word(macroName)) {
                     log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", lineNum, macroName);
                     safe_free(macroName);
                     safe_free(macroContent);

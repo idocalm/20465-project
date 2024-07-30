@@ -1,13 +1,13 @@
 MAIN:           add r3, LIST 
 LOOP:           prn #48
                 macr m_macr
-                cmp r3, #-6
+                cmp r3, #2
                 bne END 
                 endmacr
                 
                 lea STR, r6
                 inc r6 
-                mov *r6,K 
+                mov *r6, K 
                 sub r1, r4 
                 m_macr
                 dec K 

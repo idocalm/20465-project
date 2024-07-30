@@ -105,6 +105,76 @@ Register get_register(char *str)
 
     return UNKNOWN_REGISTER;
 }
-/*
-void update_addressing_mode(AddressMode *mode, 
+
+
+/**
+    * Checks if a given string is a reserved word. 
+    * @param str - the string to check.
+    * @return 1 if the string is a reserved word, 0 otherwise.
 */
+int is_reserved_word(char *str)
+{
+    return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_directive(str) != UNKNOWN_DIRECTIVE;
+}
+
+
+/**
+    * Checks if a certain command is valid with a set of given addressing modes as operands.
+    * @param op - the operation to check.
+    * @param dest - the destination addressing mode. (if exists)
+    * @param source - the source addressing mode. (if exists)
+ */
+
+int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source) {
+
+    valid_command_modes valid_table[] = {
+        {MOV, {1, 1, 1, 1}, {-1, 1, 1, 1}},
+        {CMP, {1, 1, 1, 1}, {1, 1, 1, 1}},
+        {ADD, {1, 1, 1, 1}, {-1, 1, 1, 1}},
+        {SUB, {1, 1, 1, 1}, {-1, 1, 1, 1}},
+        {LEA, {-1, 1, -1, -1}, {-1, 1, 1, 1}},
+        {CLR, {-1, -1, -1, -1}, {-1, 1, 1, 1}},
+        {NOT, {-1, -1, -1, -1}, {-1, 1, 1, 1}},
+        {INC, {-1, -1, -1, -1}, {-1, 1, 1, 1}},
+        {DEC, {-1, -1, -1, -1}, {-1, 1, 1, 1}},
+        {JMP, {-1, -1, -1, -1}, {-1, 1, 1, 1}},
+        {BNE, {-1, -1, -1, -1}, {-1, 1, 1, -1}},
+        {RED, {-1, -1, -1, -1}, {-1, 1, 1, -1}},
+        {PRN, {-1, -1, -1, -1}, {1, 1, 1, 1}},
+        {JSR, {-1, -1, -1, -1}, {-1, 1, 1, -1}},
+    };
+    int i; 
+
+    if (op == RTS || op == STOP)
+    {
+        return dest == UNKNOWN_ADDRESS && source == UNKNOWN_ADDRESS;
+    }
+
+    if (dest == UNKNOWN_ADDRESS) {
+        return 0;
+    } 
+
+    Operation no_source_ops[] = {CLR, NOT, INC, DEC, JMP, BNE, RED, PRN, JSR};
+
+    if (source == UNKNOWN_ADDRESS) {
+        int flag = 0;
+        for (i = 0; i < sizeof(no_source_ops) / sizeof(Operation); i++) {
+            if (op == no_source_ops[i]) {
+                flag = 1;
+                break;
+            }
+        }
+
+        if (!flag) {
+            return 0;
+        }
+
+
+        return valid_table[op].dest_modes[dest] != -1;
+    }
+
+    return valid_table[op].dest_modes[dest] != -1 && valid_table[op].source_modes[source] != -1;
+
+    return 0;
+
+}

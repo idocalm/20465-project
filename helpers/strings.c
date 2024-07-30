@@ -100,3 +100,68 @@ int is_comment(char *p_line) {
     skip_spaces(&p_line);
     return *p_line == COMMENT_PREFIX; 
 }
+
+/**
+    * Checks if a given string is an integer.
+    * @param p - the pointer to the string.
+    * @return 1 if the string is an integer, 0 otherwise.
+ */
+
+int is_integer(char *p)
+{
+    /*
+        Note that an integer in our system can include a '+' or '-' sign 
+        at the beginning.
+    */
+    
+    if (*p == '+' || *p == '-') 
+    {
+        p++;
+    }
+
+    while (*p)
+    {
+        if (!isdigit(*p))
+        {
+            return 0;
+        }
+        p++;
+    }
+
+    return 1;
+}
+
+
+/**
+    * Checks if a given string can be represented as a number with 12 bits.
+    * @param str - the string to be checked.
+    * @return 1 if the string matches the conditions, 0 otherwise.
+*/
+
+int is_12_bit_number(char *str)
+{
+    int num = atoi(str);
+    return num >= MIN_12_BIT_NUMBER && num <= MAX_12_BIT_NUMBER;
+}
+
+
+
+int parse_int(char *p) {
+    int pos = 1;
+    if (*p == '+' || *p == '-') {
+        pos = *p == '+' ? 1 : -1;
+        p++;
+    }
+
+    if (!is_integer(p)) {
+        return 0;
+    }
+
+    int num = atoi(p);
+
+    if (num < MIN_12_BIT_NUMBER || num > MAX_12_BIT_NUMBER) {
+        return 0;
+    }
+
+    return atoi(p) * pos;
+}

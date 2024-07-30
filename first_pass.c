@@ -47,7 +47,7 @@ FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, List *p_labels, L
         {
             handle_directive_line(p_line, lineNum, p_ic, p_labels, p_macros, 1); 
         }
-
+        
 
     }
 

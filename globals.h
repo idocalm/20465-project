@@ -7,12 +7,18 @@
 #define MAX_OPERANDS 2
 #define MAX_LABEL_SIZE 31
 
+
 typedef struct {
     unsigned int ARE: 3;
     unsigned int dest: 4;
     unsigned int source: 4;
     unsigned int opcode: 4;
-} machine_word;
+} first_word;
+
+typedef struct {
+    unsigned int ARE: 3; 
+    int value: 12;
+} additional_word;
 
 typedef enum {
     NO_OPERANDS = 0,
@@ -35,9 +41,9 @@ typedef enum {
     CMP,
     ADD,
     SUB,
-    NOT,
-    CLR,
     LEA,
+    CLR,
+    NOT,
     INC,
     DEC,
     JMP,
