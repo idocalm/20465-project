@@ -9,14 +9,12 @@
 
 #include "structs/list.h"
 #include "globals.h"
-#include "syntax/line_parser.h"
+#include "syntax/command_line.h"
+#include "syntax/data_line.h"
 
 
-typedef enum {
-    NO_FPASS_ERROR
-} FPassErrors;
 
-FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, List *p_labels, List *p_macros);
+PassError first_pass(char *p_fileName, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image);
 
 
 #endif 

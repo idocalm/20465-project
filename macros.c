@@ -1,167 +1,156 @@
 #include "macros.h"
 
-MacroErrors handle_macros(char *p_fileName, List *p_macros) {
+
+MacroErrors handle_macros(char *file_name, List *macros) {
 
     MacroErrors res; 
 
-    FILE *p_file = open_file(p_fileName, "r");
-    res = extract_macros(p_file, p_macros);
+    FILE *input_file = open_file(file_name, "r");
+
+    /* We first extract all the macros to a list, while checking for possible errors */
+    res = extract_macros(input_file, macros);
     if (res != NO_MACRO_ERROR) {
         return res;
     } 
 
-    replace_macros(p_file, p_fileName, p_macros);
-
-
-
+    /* Replace macros and create .am file */
+    replace_macros(input_file, file_name, macros);
     return NO_MACRO_ERROR;
 }
 
+void *search_macros(char *line, List *macros) {
+    Node *current = macros->head;
+    while (current != NULL) {
+        char *lookup = strstr(line, current->key);
+        if (lookup != NULL) {
+            lookup += strlen(current->key);
 
-void replace_macros(FILE *p_file, char *p_fileName, List *p_macros) {
+            while (isspace(*lookup)) {
+                lookup++;
+            }
 
-    int lineNum = 1;
-    int found = 0;
-    int insideMacro = 0;
-    char line[MAX_LINE_SIZE + 2];
+            if (*lookup == '\0' || *lookup == '\n') {
+                return current->data;
+            }
+
+
+        }
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+void replace_macros(FILE *input_file, char *file_name, List *macros) {
+
+    int line_num = 1; /* Used to keep track of the current line in the input file. */
+    int inside_macro = 0; /* Used to keep track of macro definitions*/
+    
+    char line[MAX_LINE_SIZE + 2]; /* Will store the line with fgets */ 
     char *p_line;
-    size_t fileSize; 
-    struct Node *p_current = p_macros->head;
+    size_t file_size; 
     char *output;
-    FILE *p_amFile;
+    FILE *output_file;
+    void *result;
 
-    fseek(p_file, 0, SEEK_END);
-    fileSize = ftell(p_file);
-    fseek(p_file, 0, SEEK_SET);
+    fseek(input_file, 0, SEEK_END);
+    file_size = ftell(input_file);
+    fseek(input_file, 0, SEEK_SET);
 
-    output = (char *) safe_malloc(fileSize + 1);
+    output = (char *) safe_malloc(file_size + 1);
     output[0] = '\0';
 
 
-    while (fgets(line, MAX_LINE_SIZE + 2, p_file) != NULL) 
+    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL) 
     {   
         p_line = line;
 
-   
         skip_spaces(&p_line);
 
-
         if (is_comment(p_line)) {
-            lineNum++;
+            /* We skip a command without copying it to the .am file */
+            line_num++;
             continue;
         }
 
-        if (insideMacro && strncmp(p_line, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
-            insideMacro = 0; 
-            lineNum++;
+        if (inside_macro && strncmp(p_line, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
+            /* Reached the end of a macro definition */
+            inside_macro = 0; 
+            line_num++;
             continue;
         } 
 
-        if (!insideMacro && strncmp(p_line, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 && isspace(p_line[strlen(MACRO_START_PREFIX)])) {
-            insideMacro = 1;
-            lineNum++;
+        if (!inside_macro && strncmp(p_line, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 && isspace(p_line[strlen(MACRO_START_PREFIX)])) {
+            /* Reached the start of a macro definition */
+            inside_macro = 1;
+            line_num++;
             continue;
         }
 
-        if (insideMacro) {
-            lineNum++;
+        if (inside_macro) {
+            /* We avoid copying the actual content of any macro into the .am file */
+            line_num++;
             continue;
         }
 
 
-        /* Go over the p_macros and search them in the line with strstr */
-        found = 0;
-
-        p_current = p_macros->head;
-        while (p_current != NULL) {
-            skip_spaces(&p_line);
-            char *p_macroPos = strstr(p_line, p_current->key);
-            if (p_macroPos != NULL) {
-
-                char *p_validate = p_line + strlen(p_current->key);
-                /* make sure there's a space right after the macro name */
-                if (!isspace(*p_validate) && *p_validate != '\0') {
-                    p_current = p_current->next;
-                    continue;
-                }
-    
-                /* check there are no letters after the macro name */
-            
-                char *p_macroEnd = p_validate;
-                while (isspace(*p_macroEnd)) {
-                    p_macroEnd++;
-                }
-
-                if (*p_macroEnd != '\0' && *p_macroEnd != '\n') {
-                    log_error("Extra after macro\n");
-                    p_current = p_current->next;
-                    continue;
-                }               
-
-                strcat(output, p_current->data);
-                found = 1;
-                break;
-
-            }
-            p_current = p_current->next;
-        }
-
-
-        if (found == 0) {
+        skip_spaces(&p_line);
+        result = search_macros(p_line, macros);
+        if (result != NULL) {
+            strcat(output, result);
+        } else {
             strcat(output, line);
         }
 
-        lineNum++;
+        line_num++;
 
     }
 
-    close_file(p_file);
-
+    close_file(input_file);
     output = (char *) safe_realloc(output, strlen(output) + 1);
     output[strlen(output)] = '\0';
 
+    file_name[strlen(file_name) - 1] = 'm';
+    output_file = open_file(file_name, "w");
 
-    p_fileName[strlen(p_fileName) - 1] = 'm';
+    fprintf(output_file, "%s", output);
 
-
-
-    p_amFile = open_file(p_fileName, "w");
-
-    fprintf(p_amFile, "%s", output);
-
-    close_file(p_amFile);
+    close_file(output_file);
     safe_free(output);
 
-    
+    log_success("Replaced macros successfully\n");
+
 }
 
-MacroErrors extract_macros(FILE *p_file, List *p_macros) {
-    int lineNum = 1;
+MacroErrors extract_macros(FILE *input_file, List *macros) {
+
+    int line_num = 1; 
     char line[MAX_LINE_SIZE + 2];
     char *p_line;
 
-    char *macroName = NULL;
-    char *macroContent = NULL;
-    int insideMacro = 0;
+    char *macro_name = NULL;
+    char *macro_content = NULL;
+    int inside_macro = 0;
 
     size_t macroContentSize = 0;
 
-    while (fgets(line, MAX_LINE_SIZE + 2, p_file) != NULL) 
+    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL) 
     {
         p_line = line;
+
         if (strlen(p_line) > MAX_LINE_SIZE) {
-            log_error("Line is too long: \n\tLine %d contains %ld characters while the maximum is %d\n", lineNum, strlen(p_line), MAX_LINE_SIZE); 
-            safe_free(macroName);
-            safe_free(macroContent);
+            log_error("Line is too long: \n\tLine %d contains %ld characters while the maximum is %d\n", line_num, strlen(p_line), MAX_LINE_SIZE); 
+            safe_free(macro_name);
+            safe_free(macro_content);
             return LINE_LENGTH_EXCEEDED;
         }
 
 
-        if (!insideMacro) {
+        if (!inside_macro) {
+
             /* Search for a possible macro definition */
             char *p_search = p_line;
             skip_spaces(&p_search);
-
 
             if (strncmp(p_search, MACRO_START_PREFIX, MACRO_START_PREFIX_LEN) == 0) {
                 /* Check if the next character is a space */
@@ -171,52 +160,51 @@ MacroErrors extract_macros(FILE *p_file, List *p_macros) {
                 }
 
                 /* Allocate extra space for the macro name */
-                macroName = (char *) safe_malloc(strlen(p_search) + 1);
+                macro_name = (char *) safe_malloc(strlen(p_search) + 1);
                 
                 skip_spaces(&p_search);
 
-                copy_string_until_space(macroName, p_search);
-                macroName = (char *) safe_realloc(macroName, strlen(macroName) + 1); /* Reallocate the exact size */
-                macroName[strlen(macroName)] = '\0';
+                copy_string_until_space(macro_name, p_search);
+                macro_name = (char *) safe_realloc(macro_name, strlen(macro_name) + 1); /* Reallocate the exact size */
+                macro_name[strlen(macro_name)] = '\0';
 
 
-                macroContent = (char *) safe_malloc(1);
-                macroContent[0] = '\0';
+                macro_content = (char *) safe_malloc(1);
+                macro_content[0] = '\0';
                 macroContentSize = 1; 
 
-                if (strlen(macroName) <= 0) {
-                    log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", lineNum);
-                    safe_free(macroName);
+                if (strlen(macro_name) <= 0) {
+                    log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", line_num);
+                    safe_free(macro_name);
                     return NO_MACRO_NAME;
                 }
 
                 /* Make sure there are no non-space characters after the macro name */
-                p_search += strlen(macroName);
+                p_search += strlen(macro_name);
                 skip_spaces(&p_search);
                 if (*p_search != '\0' && *p_search != '\n') {
-                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro name\n", lineNum);
-                    safe_free(macroName);
+                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro name\n", line_num);
+                    safe_free(macro_name);
                     return EXTRANEOUS_CHARACTERS;
                 }
 
 
-                
 
-                if (is_reserved_word(macroName)) {
-                    log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", lineNum, macroName);
-                    safe_free(macroName);
-                    safe_free(macroContent);
+                if (is_reserved_word(macro_name)) {
+                    log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", line_num, macro_name);
+                    safe_free(macro_name);
+                    safe_free(macro_content);
                     return INVALID_MACRO_NAME;
                 }
 
                 /* Check if the macro is already defined */
-                if (list_get(p_macros, macroName) != NULL) {
-                    log_error("Multiple macro globals in line %d\n\t Macro %s is already defined\n", lineNum, macroName);
-                    safe_free(macroName);
+                if (list_get(macros, macro_name) != NULL) {
+                    log_error("Multiple macro globals in line %d\n\t Macro %s is already defined\n", line_num, macro_name);
+                    safe_free(macro_name);
                     return MULTIPLE_MACRO_DEFINITIONS;
                 }
 
-                insideMacro = 1;                
+                inside_macro = 1;                
             }
 
 
@@ -230,45 +218,38 @@ MacroErrors extract_macros(FILE *p_file, List *p_macros) {
                 skip_spaces(&p_search);
 
                 if (*p_search != '\0' && *p_search != '\n') {
-                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro end\n", lineNum);
-                    safe_free(macroName);
-                    safe_free(macroContent);
+                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro end\n", line_num);
+                    safe_free(macro_name);
+                    safe_free(macro_content);
                     return EXTRANEOUS_CHARACTERS;
                 }
 
 
-                macroContent = (char *) safe_realloc(macroContent, macroContentSize + 1);
-                macroContent[macroContentSize] = '\0';
+                macro_content = (char *) safe_realloc(macro_content, macroContentSize + 1);
+                macro_content[macroContentSize] = '\0';
 
-                list_insert_string(p_macros, macroName, macroContent);
+                list_insert_string(macros, macro_name, macro_content);
 
-                insideMacro = 0;
-                safe_free(macroName);
-                safe_free(macroContent);
+                inside_macro = 0;
+                safe_free(macro_name);
+                safe_free(macro_content);
                 macroContentSize = 0;
 
             } else {
                 /* Add the line to the macro content */
 
-                macroContent = (char *) safe_realloc(macroContent, macroContentSize + strlen(p_line) + 1);
-                strcat(macroContent, p_line);
+                macro_content = (char *) safe_realloc(macro_content, macroContentSize + strlen(p_line) + 1);
+                strcat(macro_content, p_line);
                 macroContentSize += strlen(p_line);
             }
 
         }
 
-        lineNum++;
+        line_num++;
     }
 
-    printf("Finished extracting macros\n");
+    log_success("Extracted macros successfully\n");
 
 
     return NO_MACRO_ERROR;
 }
-
-
-
-
-
-
-

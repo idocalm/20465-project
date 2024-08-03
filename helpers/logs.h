@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "../globals.h"
 
 void red_text();
 void green_text();
@@ -15,5 +16,6 @@ void log_warning(char *format, ...);
 void log_success(char *format, ...);
 void log_info(char *format, ...);
 void log_debug(char *format, ...);
+void debug_word(machine_word *word);
 
 #endif

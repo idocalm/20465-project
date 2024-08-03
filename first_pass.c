@@ -1,28 +1,45 @@
 #include "first_pass.h"
 
-FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, List *p_labels, List *p_macros)
+
+void update_labels(Labels *labels, int ic)
+{
+    LabelEntry *current = labels->head;
+
+    while (current != NULL)
+    {
+        if (current->type == DATA_LABEL)
+        {
+            current->value += ic;
+        }
+        current = current->next;
+    }
+}
+
+PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image)
 {
 
-    FILE *p_file = open_file(p_fileName, "r");
+    FILE *input_file = open_file(file_name, "r");
 
-    char *pp_instructions[] = {
+    char *instructions[] = {
         ".data",
         ".string",
         ".entry",
         ".extern"
     };
-    int lineNum = 0;
-    int i = 0;
+
+    int line_num = 0;
     int found_line_type = 0;
+    int i = 0;
+    int found_error = 0;
 
     char line[MAX_LINE_SIZE + 2];
     char *p_line;
 
-    log_info("Intialized first pass in file %s\n", p_fileName);
+    log_info("Intialized first pass in file %s\n", file_name);
 
-    while (fgets(line, MAX_LINE_SIZE + 2, p_file) != NULL)
+    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL)
     {
-        lineNum++;
+        line_num++;
         p_line = line; 
         found_line_type = 0;
         skip_spaces(&p_line);
@@ -33,11 +50,12 @@ FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, List *p_labels, L
         }
 
 
-        for (i = 0; i < sizeof(pp_instructions) / sizeof(char *); i++)
+        for (i = 0; i < sizeof(instructions) / sizeof(char *); i++)
         {
-            if (strstr(p_line, pp_instructions[i]) != NULL)
+            if (strstr(p_line, instructions[i]) != NULL)
             {
-                handle_instruction_line(p_line);
+                /* Instruction aka .data, .string, .entry, .extern */
+                handle_instruction_line(p_line, line_num, ic, dc, labels, macros, data_image);
                 found_line_type = 1;
                 break;
             }
@@ -45,17 +63,29 @@ FPassErrors first_pass(char *p_fileName, int *p_ic, int *p_dc, List *p_labels, L
 
         if (found_line_type == 0)
         {
-            handle_directive_line(p_line, lineNum, p_ic, p_labels, p_macros, 1); 
+            /* An actual instruction aka mov, add, stop, etc */
+            if (!handle_directive_line(p_line, line_num, ic, labels, macros, code_image))
+            {
+                found_error = 1;
+            }
         }
         
 
     }
 
+    if (found_error)
+    {
+        return FOUND_ERROR;
+    } 
 
-    close_file(p_file);
+    /* We update the labels with the ic value */
+
+    update_labels(labels, *ic);
+
+    close_file(input_file);
     
 
-    return 0;
+    return NO_PASS_ERROR;
     
 
 }

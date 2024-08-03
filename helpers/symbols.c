@@ -117,6 +117,62 @@ int is_reserved_word(char *str)
     return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_directive(str) != UNKNOWN_DIRECTIVE;
 }
 
+/**
+    * Checks if a string is a definition of a label. 
+    * @param label - the string.
+    * @param macros - list of macros (used to check the label isn't a macro).
+    * @return the label if it is a label, NULL otherwise. 
+ */
+
+char *is_label_def(char *label, List *p_macros) {
+
+    char *ptr = label;
+    char *copy = NULL; 
+
+    while (*ptr != '\0' && *ptr != '\n' && *ptr != ':') { /* Label must contain only letters and digits */
+        if (!isalpha(*ptr) && !isdigit(*ptr)) {
+            return 0;
+        }
+        ptr++;
+    }
+
+    if (*ptr != ':') { /* Label must end with a ; */
+        return 0;
+    }
+
+    copy = (char *) safe_malloc(ptr - label + 1);
+    strncpy(copy, label, ptr - label);
+    copy[ptr - label] = '\0';
+
+
+    if (!is_reserved_word(copy) && list_get(p_macros, copy) == NULL && strlen(copy) <= MAX_LABEL_SIZE) {
+        return copy;
+    }
+
+    
+    safe_free(copy);
+    return NULL;
+
+}
+
+int is_label(char *label) {
+    char *ptr = label;
+
+    /* TODO FIX HERE */
+    
+    /* Label must contain only letters and digits */
+    while (*ptr != '\0' && *ptr != '\n') { 
+        if (!isalpha(*ptr) && !isdigit(*ptr)) {
+            return 0;
+        }
+        ptr++;
+    }
+
+
+
+    return 1;
+}
+
 
 /**
     * Checks if a certain command is valid with a set of given addressing modes as operands.
@@ -126,7 +182,8 @@ int is_reserved_word(char *str)
  */
 
 int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source) {
-
+    
+    Operation no_source_ops[] = {CLR, NOT, INC, DEC, JMP, BNE, RED, PRN, JSR};
     valid_command_modes valid_table[] = {
         {MOV, {1, 1, 1, 1}, {-1, 1, 1, 1}},
         {CMP, {1, 1, 1, 1}, {1, 1, 1, 1}},
@@ -154,7 +211,6 @@ int valid_command_with_operands(Operation op, AddressMode dest, AddressMode sour
         return 0;
     } 
 
-    Operation no_source_ops[] = {CLR, NOT, INC, DEC, JMP, BNE, RED, PRN, JSR};
 
     if (source == UNKNOWN_ADDRESS) {
         int flag = 0;
@@ -177,4 +233,34 @@ int valid_command_with_operands(Operation op, AddressMode dest, AddressMode sour
 
     return 0;
 
+}
+
+
+
+OperationGroup get_operation_group(Operation op) {
+    if (op == MOV || op == CMP || op == ADD || op == SUB || op == LEA) {
+        return TWO_OPERANDS;
+    } else if (op == CLR || op == NOT || op == INC || op == DEC || op == JMP ||
+         op == BNE || op == RED || op == PRN || op == JSR 
+    ) {
+        return SINGLE_OPERAND;
+    } else {
+        return NO_OPERANDS;
+    }
+}
+
+
+
+AddressMode find_addressing_mode(char *operand) {
+    if (operand[0] == '#' && is_integer(operand + 1) != NON_VALID_INTEGER) { /* Immediate addressing has '#' followed by a number */
+        return IMMEDIATE; 
+     } else if (get_register(operand) != UNKNOWN_REGISTER) { /* 'Register addressing' has 'r' followed by a number between 0-7 */
+        return REGISTER;
+    } else if (operand[0] == '*' && get_register(operand + 1) != UNKNOWN_REGISTER) { /* 'Relative addressing' has '*' followed by a register */
+        return RELATIVE;
+    } else if (is_label(operand)) { /* 'Direct addressing' is a label */
+        return DIRECT;
+    }
+
+    return UNKNOWN_ADDRESS;
 }

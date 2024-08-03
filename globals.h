@@ -2,23 +2,22 @@
 #ifndef globals_H
 #define globals_H
 
-
+#define INITIAL_IC_VALUE 100
 #define MAX_LINE_SIZE 80
 #define MAX_OPERANDS 2
 #define MAX_LABEL_SIZE 31
+#define NON_VALID_INTEGER 2048 /* Can't be represented in 12 bits */
+
+/* A note: We chose to limit our capacity to 1000 lines of machine words.
+    Which means our assembler can at worst case support 333 lines of assembly. 
+*/      
+#define ASSEMBLER_MAX_CAPACITY 1000 
 
 
 typedef struct {
-    unsigned int ARE: 3;
-    unsigned int dest: 4;
-    unsigned int source: 4;
-    unsigned int opcode: 4;
-} first_word;
-
-typedef struct {
-    unsigned int ARE: 3; 
-    int value: 12;
-} additional_word;
+    int ic;
+    unsigned int data: 15;
+} machine_word; 
 
 typedef enum {
     NO_OPERANDS = 0,
@@ -32,8 +31,8 @@ typedef enum {
     DIRECT = 1, 
     RELATIVE = 2, /* Operand is a "pointer" */
     REGISTER = 3 /* Operand is a register */ 
-
 } AddressMode;
+
 
 typedef enum {
     UNKNOWN_OPERATION = -1,
@@ -75,6 +74,16 @@ typedef enum {
     R7
 } Register; 
 
+typedef struct {
+    char *name;
+    int is_internal;
+    int is_external;
+} Label;
 
+/* TODO: Decide if you want to continue with this approach. If so, add the errors here and work with them. If not just return an int. */
+typedef enum {
+    NO_PASS_ERROR,
+    FOUND_ERROR
+} PassError;
 
 #endif

@@ -117,3 +117,23 @@ void log_debug(char *format, ...)
     va_end(args);
     reset_text();
 }
+
+
+void debug_word(machine_word *word) {
+
+    int i;
+
+    if (word == NULL) {
+        return;
+    }
+
+    printf("%d\t\t", word->ic);
+
+    for (i = 14; i >= 0; i--) {
+        printf("%d", (word->data >> i) & 1);
+    }
+
+
+    printf("\n");
+}
+

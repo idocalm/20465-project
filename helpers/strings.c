@@ -13,6 +13,8 @@ void skip_non_spaces(char **pp_line) {
     }
 }
 
+
+
 /**
     * Skips all spaces at the beginning of a given string.
     * @param p - the pointer to the string.
@@ -27,20 +29,19 @@ void skip_spaces(char **p)
 
 /**
     * Checks if a given string is composed only of spaces.
-    * @param start - the start of the string.
-    * @param end - the end of the string.
+    * @param str - the string.
     * @return 1 if the string is empty, 0 otherwise.
 */
 
-int is_empty(char *start, char *end)
+int is_empty(char *str)
 {
-    while (start < end)
+    while (*str != '\0')
     {
-        if (*start != ' ' && *start != '\t')
+        if (!isspace(*str))
         {
             return 0; /* not empty */
         }
-        start++;
+        str++;
     }
     return 1; /* empty */
 }
@@ -85,11 +86,6 @@ void copy_string_until_space(char *dest, const char *src)
     dest[i] = '\0';
 }
 
-/* TOOD: why? */
-int non_character(char c) {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\0';
-}
-
 /**
     * Checks if a given string is a comment.
     * @param p_line - the pointer to the string.
@@ -102,66 +98,44 @@ int is_comment(char *p_line) {
 }
 
 /**
-    * Checks if a given string is an integer.
+    * Checks if a given string is an integer that can be represented in 12 bits.
     * @param p - the pointer to the string.
-    * @return 1 if the string is an integer, 0 otherwise.
+    * @return the integer value if the string is an integer, 
  */
 
 int is_integer(char *p)
 {
+
     /*
         Note that an integer in our system can include a '+' or '-' sign 
         at the beginning.
     */
-    
+
+    int sign = 1;
+    int num = NON_VALID_INTEGER;
+    int i = 0;
+
     if (*p == '+' || *p == '-') 
     {
+        sign = *p == '+' ? 1 : -1; 
         p++;
     }
 
-    while (*p)
+    for (i = 0; i < strlen(p); i++)
     {
-        if (!isdigit(*p))
+        if (!isdigit(p[i]))
         {
-            return 0;
+            return NON_VALID_INTEGER;
         }
-        p++;
     }
 
-    return 1;
-}
+    num = atoi(p);
 
-
-/**
-    * Checks if a given string can be represented as a number with 12 bits.
-    * @param str - the string to be checked.
-    * @return 1 if the string matches the conditions, 0 otherwise.
-*/
-
-int is_12_bit_number(char *str)
-{
-    int num = atoi(str);
-    return num >= MIN_12_BIT_NUMBER && num <= MAX_12_BIT_NUMBER;
-}
-
-
-
-int parse_int(char *p) {
-    int pos = 1;
-    if (*p == '+' || *p == '-') {
-        pos = *p == '+' ? 1 : -1;
-        p++;
+    if (num < MIN_12_BIT_NUMBER || num > MAX_12_BIT_NUMBER) 
+    {
+        return NON_VALID_INTEGER;
     }
+    
 
-    if (!is_integer(p)) {
-        return 0;
-    }
-
-    int num = atoi(p);
-
-    if (num < MIN_12_BIT_NUMBER || num > MAX_12_BIT_NUMBER) {
-        return 0;
-    }
-
-    return atoi(p) * pos;
+    return num * sign;
 }
