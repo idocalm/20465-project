@@ -16,7 +16,7 @@ LOOP:           prn #48
                 add r7, *r6
                 clr K
                 sub L3, L3
-.entry MAIN
+.entry MAIN 
                 jmp LOOP 
 END:              stop 
 STR:            .string "abcd" 

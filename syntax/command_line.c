@@ -262,9 +262,7 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, mac
         found_error = 1;
     }
 
-
-
-
+    
     /* Build the instruction */
     first_word = build_first_word(op, source, dest, ic, line_num);
     code_image[*ic - INITIAL_IC_VALUE] = first_word;

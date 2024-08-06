@@ -1,6 +1,6 @@
 #include "data_line.h"
 
-void insert_data_arguments(char *line, int *dc, machine_word **data_image, int line_num) {
+int insert_data_arguments(char *line, int *dc, machine_word **data_image, int line_num) {
     char *operand = NULL;
     char *ptr = line;
     char *last_char = line + strlen(line) - 1;
@@ -10,7 +10,7 @@ void insert_data_arguments(char *line, int *dc, machine_word **data_image, int l
 
     if (line[0] == ',') {
         log_error("Invalid data in line %d.\n\t Data starts with a comma\n", line_num);
-        return;
+        return 0;
     }
 
     /* Validate that the line doesn't end with a comma */
@@ -20,7 +20,7 @@ void insert_data_arguments(char *line, int *dc, machine_word **data_image, int l
 
     if (*last_char == ',') {
         log_error("Invalid data in line %d.\n\t Data ends with a comma\n", line_num);
-        return;
+        return 0;
     }
 
 
@@ -30,7 +30,7 @@ void insert_data_arguments(char *line, int *dc, machine_word **data_image, int l
         skip_spaces(&operand);
         if (*operand == ',') {
             log_error("Invalid data in line %d.\n\t Double commas in data\n", line_num);
-            return;
+            return 0;
         }
         ptr = operand + 1;
     }   
@@ -48,7 +48,7 @@ void insert_data_arguments(char *line, int *dc, machine_word **data_image, int l
 
         if (value == NON_VALID_INTEGER) {
             log_error("Invalid data in line %d\n\t. Data '%s' is not an integer\n", line_num,  operand);
-            return;
+            return 0;
         }
 
 
@@ -59,6 +59,7 @@ void insert_data_arguments(char *line, int *dc, machine_word **data_image, int l
         ptr = NULL;
     }
 
+    return 1;
 
 }
 
@@ -80,7 +81,7 @@ void insert_string_arguments(char *line, int *dc, machine_word **data_image, int
     (*dc)++;
 }
 
-void insert_extern_arguments(char *line, Labels *labels, int line_num) {
+int insert_extern_arguments(char *line, Labels *labels, int line_num) {
     char *entry_label = (char *) safe_malloc(MAX_LABEL_SIZE);   
     copy_string_until_space(entry_label, line);
     entry_label = (char *) safe_realloc(entry_label, strlen(entry_label) + 1);
@@ -88,13 +89,14 @@ void insert_extern_arguments(char *line, Labels *labels, int line_num) {
 
     if (!is_label(entry_label)) {
         log_error("Invalid entry in line %d\n\tEntry label is not a valid label\n", line_num);
-        return;
+        return 0;
     }
 
-    /* Can you assume that the label is not already defined? */
+    /* TODO: Can you assume that the label is not already defined? */
 
     labels_insert(labels, entry_label, 0, EXTERN_LABEL);
     safe_free(entry_label);
+    return 1;
 
 }
 
@@ -181,9 +183,15 @@ int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *
             return 0;
         }
 
-        insert_data_arguments(line, dc, data_image, line_num);
+        if (!insert_data_arguments(line, dc, data_image, line_num)) {
+            found_error = 1;
+        }
+
     } else if (directive == EXTERN) {
-        insert_extern_arguments(line, labels, line_num);
+        if (!insert_extern_arguments(line, labels, line_num)) {
+            found_error = 1;
+        }
+        
     }
 
     safe_free(directive_name);
