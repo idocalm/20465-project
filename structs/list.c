@@ -33,12 +33,14 @@ void list_insert_integer(List* list, char *key, int data) {
     
     strcpy(new_node->key, key);
 
+
     *(int*) new_node->data = data;
 
     new_node->type = INTEGER_TYPE;
     
     new_node->next = list->head;
     list->head = new_node;
+
 
 }
 
@@ -94,9 +96,14 @@ void list_free(List* list) {
 
 void list_print(List* list) {
     Node* current = list->head;
+    printf("Printing list\n");
+
 
     while (current != NULL) {
         printf("%s\n", current->key);
+        printf("%d\n", *(int*) current->data);
         current = current->next;
     }
+
+    printf("End of list\n");
 }

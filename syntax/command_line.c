@@ -13,10 +13,11 @@ void get_operands(char *line, char **operands, int *operandsCount) {
         }
 
         operands[i] = (char *) safe_malloc(strlen(operand) + 1);
+
         remove_all_spaces(operand);
         strcpy(operands[i], operand);
 
-        operands[i] = (char *) safe_realloc(operands[i], strlen(operands[i]));
+        operands[i] = (char *) safe_realloc(operands[i], strlen(operands[i]) + 1);
         i++;
         line = NULL; 
     }
@@ -42,6 +43,7 @@ machine_word *build_single_word(char *source, char *dest, int *ic, int line_num)
     word = (machine_word *) safe_malloc(sizeof(machine_word));
     word->ic = *ic;
 
+
     if (source_reg == UNKNOWN_REGISTER) {
         log_error("Invalid register in line %d\n\tOperand: %s\n", line_num, source);
         found_error = 1;
@@ -64,6 +66,7 @@ machine_word *build_single_word(char *source, char *dest, int *ic, int line_num)
 }
 
 machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand, int *ic, int line_num) {
+
     machine_word *word = (machine_word *) safe_malloc(sizeof(machine_word));
     word->ic = *ic;
 
@@ -118,7 +121,7 @@ machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand
 
 }
 
-machine_word *build_first_word(Operation op, AddressMode source, AddressMode dest, List *macros, int *ic, int line_num) {
+machine_word *build_first_word(Operation op, AddressMode source, AddressMode dest, int *ic, int line_num) {
     machine_word *word = (machine_word *) safe_malloc(sizeof(machine_word));
 
     word->data = 0;
@@ -138,7 +141,15 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
 
 }   
 
-int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, List *macros, machine_word **code_image) {
+void free_operands(char **operands, int operandsCount) {
+    int i;
+    for (i = 0; i < operandsCount; i++) {
+        safe_free(operands[i]);
+    }
+    safe_free(operands);
+}
+
+int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, machine_word **code_image) {
     char *operationName = NULL;
     char **operands = safe_malloc(MAX_OPERANDS * sizeof(char *));
     AddressMode dest, source; 
@@ -150,37 +161,39 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, Lis
     OperationGroup op_group;
     int operandsCount = 0;
 
-    machine_word *first_word = (machine_word *) safe_malloc(sizeof(machine_word));
-    machine_word *second_word = (machine_word *) safe_malloc(sizeof(machine_word));
+    machine_word *first_word = NULL;
+    machine_word *second_word = NULL;
     machine_word *third_word = NULL;
-    char *label;
+    char label[MAX_LABEL_SIZE + 1];
+    label[MAX_LABEL_SIZE] = '\0';
     int found_error = 0;
 
     /* Replace the last character with a null terminator */
-    line[strlen(line) - 1] = '\0';
 
     skip_spaces(&line);
 
     /* #1 - Extract the label, if exists. */
-    label = is_label_def(line, macros);
+    if (is_label_error(line, line_num, label, 1)) {
+        found_error = 1;
+        printf("Returning at: %d\n", line_num);
+        return 1; /* Maybe this shouldn't be a return */
+    }
 
 
-    if (label != NULL) {
+    if (label[0] != '\0') {
         LabelEntry *entry = labels_get(labels, label);
         if (entry != NULL && entry->type == CODE_LABEL) {
             log_error("Label already defined in line %d\n\tLabel: %s\n", line_num, label);
-            safe_free(label);
             found_error = 1;
         }
-
+        
         line += strlen(label) + 1;
         labels_insert(labels, label, *ic, CODE_LABEL);
 
-        safe_free(label);
     }
 
-    skip_spaces(&line);
 
+    skip_spaces(&line);
 
     /*
         #2 - Extract the operation name.
@@ -188,20 +201,24 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, Lis
 
     operationName = (char *) safe_malloc(MAX_LINE_SIZE);
     copy_string_until_space(operationName, line);
+
     operationName = (char *) safe_realloc(operationName, strlen(operationName) + 1);
 
     op = get_operation(operationName);
 
     if (op == UNKNOWN_OPERATION) {
         log_error("Invalid operation name in line %d\n\tOperation name: %s at: ...%s\n", line_num, operationName, line);
-        found_error = 1;
+        safe_free(operationName);
+        free_operands(operands, operandsCount);
+        return 0;
     }
 
     op_group = get_operation_group(op);
     line += strlen(operationName);
+
     skip_spaces(&line);
 
-
+    
     /*
         #3 - Extract the operands.
     */
@@ -246,13 +263,10 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, Lis
     }
 
 
-    if (found_error) {
-        safe_free(operationName);
-        return 0;
-    }
+
 
     /* Build the instruction */
-    first_word = build_first_word(op, source, dest, macros, ic, line_num);
+    first_word = build_first_word(op, source, dest, ic, line_num);
     code_image[*ic - INITIAL_IC_VALUE] = first_word;
     (*ic)++;
 
@@ -260,6 +274,7 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, Lis
     is_dest_reg = dest == REGISTER || dest == RELATIVE;
 
     if (is_source_reg && is_dest_reg) {
+
         second_word = build_single_word(operands[0], operands[1], ic, line_num);
         code_image[*ic - INITIAL_IC_VALUE] = second_word;
         (*ic)++;
@@ -277,6 +292,11 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, Lis
     } 
 
     safe_free(operationName);
+    free_operands(operands, operandsCount);
+
+    if (found_error) 
+        return 0;
+    
 
     return 1;
 

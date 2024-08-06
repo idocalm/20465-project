@@ -37,7 +37,8 @@ Register get_register(char *str);
 
 int is_reserved_word(char *str);
 int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source);
-char *is_label_def(char *label, List *p_macros);
+int is_label_error(char *label, int line_num, char *dest, int report_error);
+
 int is_label(char *label);
 
 OperationGroup get_operation_group(Operation op);

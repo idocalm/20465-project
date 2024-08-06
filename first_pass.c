@@ -42,6 +42,8 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
         line_num++;
         p_line = line; 
         found_line_type = 0;
+
+
         skip_spaces(&p_line);
 
         if (*p_line == '\0' || *p_line == '\n')
@@ -55,7 +57,9 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
             if (strstr(p_line, instructions[i]) != NULL)
             {
                 /* Instruction aka .data, .string, .entry, .extern */
-                handle_instruction_line(p_line, line_num, ic, dc, labels, macros, data_image);
+                if (!handle_instruction_line(p_line, line_num, ic, dc, labels, data_image)) {
+                    found_error = 1;
+                }
                 found_line_type = 1;
                 break;
             }
@@ -64,7 +68,7 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
         if (found_line_type == 0)
         {
             /* An actual instruction aka mov, add, stop, etc */
-            if (!handle_directive_line(p_line, line_num, ic, labels, macros, code_image))
+            if (!handle_directive_line(p_line, line_num, ic, labels, code_image))
             {
                 found_error = 1;
             }

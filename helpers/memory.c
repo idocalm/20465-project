@@ -23,6 +23,16 @@ void *safe_malloc(size_t size)
     return ptr;
 }
 
+void *safe_calloc(size_t nmemb, size_t size)
+{
+    void *ptr = calloc(nmemb, size);
+    if (ptr == NULL)
+    {
+        log_error("Could not allocate memory of size: %ld\n", size);
+        exit(1);
+    }
+    return ptr;
+}
 
 /**
     * Reallocates memory of a given size
@@ -35,13 +45,14 @@ void *safe_malloc(size_t size)
 
 void *safe_realloc(void *ptr, size_t size)
 {
-    ptr = realloc(ptr, size);
-    if (ptr == NULL)
+    void* temp = realloc(ptr, size);
+    if (temp == NULL)
     {
+        free(ptr);
         log_error("Could not reallocate memory of size: %ld\n", size);
         exit(1);
     }
-    return ptr;
+    return temp;
 }
 
 

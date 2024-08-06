@@ -128,6 +128,7 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
     char line[MAX_LINE_SIZE + 2];
     char *p_line;
 
+    int found_error = 0;
     char *macro_name = NULL;
     char *macro_content = NULL;
     int inside_macro = 0;
@@ -140,9 +141,8 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
 
         if (strlen(p_line) > MAX_LINE_SIZE) {
             log_error("Line is too long: \n\tLine %d contains %ld characters while the maximum is %d\n", line_num, strlen(p_line), MAX_LINE_SIZE); 
-            safe_free(macro_name);
-            safe_free(macro_content);
-            return LINE_LENGTH_EXCEEDED;
+            found_error = 1;
+            continue;
         }
 
 
@@ -160,6 +160,8 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 }
 
                 /* Allocate extra space for the macro name */
+                if (macro_name) 
+                    safe_free(macro_name);
                 macro_name = (char *) safe_malloc(strlen(p_search) + 1);
                 
                 skip_spaces(&p_search);
@@ -168,15 +170,16 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 macro_name = (char *) safe_realloc(macro_name, strlen(macro_name) + 1); /* Reallocate the exact size */
                 macro_name[strlen(macro_name)] = '\0';
 
-
+                if (macro_content) 
+                    safe_free(macro_content);
                 macro_content = (char *) safe_malloc(1);
                 macro_content[0] = '\0';
                 macroContentSize = 1; 
 
                 if (strlen(macro_name) <= 0) {
                     log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", line_num);
-                    safe_free(macro_name);
-                    return NO_MACRO_NAME;
+                    found_error = 1;
+                    continue;
                 }
 
                 /* Make sure there are no non-space characters after the macro name */
@@ -184,24 +187,23 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 skip_spaces(&p_search);
                 if (*p_search != '\0' && *p_search != '\n') {
                     log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro name\n", line_num);
-                    safe_free(macro_name);
-                    return EXTRANEOUS_CHARACTERS;
+                    found_error = 1;
+                    continue;
                 }
 
 
 
                 if (is_reserved_word(macro_name)) {
                     log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", line_num, macro_name);
-                    safe_free(macro_name);
-                    safe_free(macro_content);
-                    return INVALID_MACRO_NAME;
+                    found_error = 1;
+                    continue;
                 }
 
                 /* Check if the macro is already defined */
                 if (list_get(macros, macro_name) != NULL) {
                     log_error("Multiple macro globals in line %d\n\t Macro %s is already defined\n", line_num, macro_name);
-                    safe_free(macro_name);
-                    return MULTIPLE_MACRO_DEFINITIONS;
+                    found_error = 1;
+                    continue;
                 }
 
                 inside_macro = 1;                
@@ -219,20 +221,19 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
 
                 if (*p_search != '\0' && *p_search != '\n') {
                     log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro end\n", line_num);
-                    safe_free(macro_name);
-                    safe_free(macro_content);
-                    return EXTRANEOUS_CHARACTERS;
+                    found_error = 1;
+                    continue;
                 }
-
 
                 macro_content = (char *) safe_realloc(macro_content, macroContentSize + 1);
                 macro_content[macroContentSize] = '\0';
 
                 list_insert_string(macros, macro_name, macro_content);
 
-                inside_macro = 0;
                 safe_free(macro_name);
                 safe_free(macro_content);
+
+                inside_macro = 0;
                 macroContentSize = 0;
 
             } else {
@@ -248,8 +249,13 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
         line_num++;
     }
 
-    log_success("Extracted macros successfully\n");
-
+    if (found_error) {
+        if (macro_name) 
+            safe_free(macro_name);
+        if (macro_content)
+            safe_free(macro_content);
+        return MACRO_ERROR;
+    }
 
     return NO_MACRO_ERROR;
 }

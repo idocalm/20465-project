@@ -54,17 +54,21 @@ int is_empty(char *str)
 void remove_all_spaces(char *p) {
     char *p_start = p;
     char *p_end = p + strlen(p) - 1;
+    size_t trimmed = 0;
 
     while (isspace(*p_start)) {
         p_start++;
     }
 
-    while (isspace(*p_end)) {
+    while (isspace(*p_end) && p_end >= p_start) {
         p_end--;
     }
 
-    strncpy(p, p_start, p_end - p_start + 1);
-    p[p_end - p_start + 1] = '\0';
+    trimmed = p_end - p_start + 1;
+
+    memmove(p, p_start, trimmed);
+    p[trimmed] = '\0';
+
 }
 
 /**

@@ -14,7 +14,6 @@
 #include "helpers/strings.h"
 #include "first_pass.h"
 
-PassError second_pass(char *file_name, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image); 
-
+PassError second_pass(char *file_name, List* macros, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image);
 
 #endif

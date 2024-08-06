@@ -25,10 +25,10 @@ typedef struct {
 } Labels; 
 
 Labels* labels_create();
-void labels_insert(Labels* symbols, char *key, int value, LabelType type);
-LabelEntry* labels_get(Labels* symbols, char *key);
-void labels_delete(Labels* symbols, char *key);
-void labels_free(Labels* symbols);
-void debug_labels(Labels* symbols);
+void labels_insert(Labels* labels, char *key, int value, LabelType type);
+LabelEntry* labels_get(Labels* labels, char *key);
+void labels_delete(Labels* labels, char *key);
+void labels_free(Labels* labels);
+void debug_labels(Labels* labels);
 
 #endif

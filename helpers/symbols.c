@@ -90,6 +90,7 @@ Directive get_directive(char *str)
 */
 Register get_register(char *str)
 {
+
     if (strlen(str) != 2) 
     {
         return UNKNOWN_REGISTER;
@@ -117,60 +118,61 @@ int is_reserved_word(char *str)
     return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_directive(str) != UNKNOWN_DIRECTIVE;
 }
 
-/**
-    * Checks if a string is a definition of a label. 
-    * @param label - the string.
-    * @param macros - list of macros (used to check the label isn't a macro).
-    * @return the label if it is a label, NULL otherwise. 
- */
 
-char *is_label_def(char *label, List *p_macros) {
+int is_label_error(char *line, int line_num, char *dest, int report_error) {
+    int j = 0;
+    char *ptr;
 
-    char *ptr = label;
-    char *copy = NULL; 
+    skip_spaces(&line);
+    ptr = line;
 
-    while (*ptr != '\0' && *ptr != '\n' && *ptr != ':') { /* Label must contain only letters and digits */
-        if (!isalpha(*ptr) && !isdigit(*ptr)) {
-            return 0;
+
+    for (; *ptr && *ptr != ':' && *ptr != '\n'; j++, ptr++) {
+        if (j > MAX_LINE_SIZE) {
+            if (report_error) {
+                log_error("Invalid label in line %d\n\tLabel: %s is too long\n", line_num, dest);
+            }
+            dest[0] = '\0'; /* Signal it's not a definition */
+            return 1; /* There's an error */
         }
-        ptr++;
+        dest[j] = *ptr;
+    } 
+
+
+
+    dest[j] = '\0'; /* Null terminate the string */
+
+    if (*ptr == ':') {
+        if (!is_label(dest)) {
+            if (report_error) {
+                log_error("Invalid label in line %d\n\tLabel: %s is not a valid label\n", line_num, dest);
+            }
+            dest[0] = '\0'; /* Signal it's not a definition */
+            return 1; /* There's an error */
+        } 
+        return 0; /* No error */
     }
+    dest[0] = '\0'; /* Signal it's not a definition */
 
-    if (*ptr != ':') { /* Label must end with a ; */
-        return 0;
-    }
-
-    copy = (char *) safe_malloc(ptr - label + 1);
-    strncpy(copy, label, ptr - label);
-    copy[ptr - label] = '\0';
-
-
-    if (!is_reserved_word(copy) && list_get(p_macros, copy) == NULL && strlen(copy) <= MAX_LABEL_SIZE) {
-        return copy;
-    }
-
-    
-    safe_free(copy);
-    return NULL;
-
+    return 0; /* No error */
 }
+
 
 int is_label(char *label) {
     char *ptr = label;
-
-    /* TODO FIX HERE */
     
+    /* TODO FIX THIS */
+    int isMacro = 0;
+
     /* Label must contain only letters and digits */
-    while (*ptr != '\0' && *ptr != '\n') { 
+    while (*ptr != '\0' && *ptr != '\n' && *ptr && *ptr != EOF) {
         if (!isalpha(*ptr) && !isdigit(*ptr)) {
             return 0;
         }
         ptr++;
     }
 
-
-
-    return 1;
+    return is_reserved_word(label) == 0 && strlen(label) <= MAX_LABEL_SIZE && !isMacro;
 }
 
 
