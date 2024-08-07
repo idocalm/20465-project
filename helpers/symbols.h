@@ -30,18 +30,18 @@ typedef struct {
     int dest_modes[ADDRESSING_MODES];
 } valid_command_modes;
 
+/* - Prototypes - */
+
 Operation get_operation(char *str);
 Directive get_directive(char *str);
 Register get_register(char *str);
-
-
 int is_reserved_word(char *str);
-int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source);
 int is_label_error(char *label, int line_num, char *dest, int report_error);
-
 int is_label(char *label);
+int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source);
+
 
 OperationGroup get_operation_group(Operation op);
-AddressMode find_addressing_mode(char *operand);
+AddressMode address_mode(char *operand);
 
 #endif

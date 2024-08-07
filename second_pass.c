@@ -42,10 +42,6 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
     char line[MAX_LINE_SIZE + 2];
     char *p_line;
 
-    
-    char label[MAX_LABEL_SIZE + 1];
-    label[MAX_LABEL_SIZE] = '\0';
-
     int ic_counter = INITIAL_IC_VALUE;
     char *operation_name;
     LabelEntry *entry;
@@ -55,6 +51,9 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
     int operands_count;
 
     AddressMode dest, source;
+    
+    char label[MAX_LABEL_SIZE + 1];
+    label[MAX_LABEL_SIZE] = '\0';
 
     log_info("Intialized second pass in file %s\n", file_name);
 
@@ -90,7 +89,7 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
 
         if (strstr(p_line, ".entry") != NULL) {
             /* Check that the label is not already defined as an extern */
-            
+            p_line = strstr(p_line, ".entry");
             p_line += strlen(".entry");
             skip_spaces(&p_line);
 
@@ -99,6 +98,8 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
 
 
             char *validate = p_line + strlen(value) + 1; 
+
+
             skip_spaces(&validate);
 
             if (*validate != '\0' && *validate != '\n') {
@@ -123,7 +124,7 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
                 }
                 labels_insert(labels, value, entry->value, ENTRY_LABEL);
             } else {
-                log_error("Label referenced in .entry directive is not defined\n\tLabel: %s\n", value);
+                log_error("Label referenced in .entry directive is not defined in line: %d\n\tLabel: %s\n", line_num, value);
                 found_error = 1;
             }
 
@@ -147,11 +148,11 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
         get_operands(p_line, operands, &operands_count);
 
         if (operands_count == 1) {
-            dest = find_addressing_mode(operands[0]);
+            dest = address_mode(operands[0]);
             source = UNKNOWN_ADDRESS;
         } else if (operands_count == 2) {
-            source = find_addressing_mode(operands[0]);
-            dest = find_addressing_mode(operands[1]);
+            source = address_mode(operands[0]);
+            dest = address_mode(operands[1]);
         } else {
             dest = UNKNOWN_ADDRESS;
             source = UNKNOWN_ADDRESS;

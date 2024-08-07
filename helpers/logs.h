@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include "../globals.h"
 
+/* - Prototypes - */
+
 void red_text();
 void green_text();
 void yellow_text();

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include "logs.h"
 
+/* - Prototypes - */
+
 void *safe_malloc(size_t size);
 void *safe_realloc(void *ptr, size_t size);
 void safe_free(void *ptr);

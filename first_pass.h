@@ -9,7 +9,7 @@
 
 #include "structs/list.h"
 #include "globals.h"
-#include "syntax/command_line.h"
+#include "syntax/code_line.h"
 #include "syntax/data_line.h"
 
 

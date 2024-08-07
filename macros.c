@@ -160,8 +160,10 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 }
 
                 /* Allocate extra space for the macro name */
-                if (macro_name) 
+                if (macro_name) {
                     safe_free(macro_name);
+                    macro_name = NULL;
+                }
                 macro_name = (char *) safe_malloc(strlen(p_search) + 1);
                 
                 skip_spaces(&p_search);
@@ -171,7 +173,11 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 macro_name[strlen(macro_name)] = '\0';
 
                 if (macro_content) 
+                {
                     safe_free(macro_content);
+                    macro_content = NULL;
+                }
+
                 macro_content = (char *) safe_malloc(1);
                 macro_content[0] = '\0';
                 macroContentSize = 1; 
@@ -190,8 +196,6 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                     found_error = 1;
                     continue;
                 }
-
-
 
                 if (is_reserved_word(macro_name)) {
                     log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", line_num, macro_name);
@@ -232,6 +236,8 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
 
                 safe_free(macro_name);
                 safe_free(macro_content);
+                macro_name = NULL;
+                macro_content = NULL;
 
                 inside_macro = 0;
                 macroContentSize = 0;

@@ -4,8 +4,8 @@
 */
 
 /**
-    * Allocates memory of a given size
-    * @param size - the size of the memory to be allocated
+    * Allocates memory
+    * @param size - the size of the memory
     * @return a pointer to the allocated memory
 
     Implementing this function allows us to avoid 
@@ -23,16 +23,6 @@ void *safe_malloc(size_t size)
     return ptr;
 }
 
-void *safe_calloc(size_t nmemb, size_t size)
-{
-    void *ptr = calloc(nmemb, size);
-    if (ptr == NULL)
-    {
-        log_error("Could not allocate memory of size: %ld\n", size);
-        exit(1);
-    }
-    return ptr;
-}
 
 /**
     * Reallocates memory of a given size
@@ -41,7 +31,6 @@ void *safe_calloc(size_t nmemb, size_t size)
     * @return a pointer to the reallocated memory
 
 */
-
 
 void *safe_realloc(void *ptr, size_t size)
 {

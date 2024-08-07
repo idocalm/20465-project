@@ -7,8 +7,8 @@
 #include "../helpers/memory.h"  
 
 typedef enum {
-    CODE_LABEL,
-    DATA_LABEL,
+    CODE_LABEL, /* A label defined at the start of a code line */
+    DATA_LABEL,  /* .data / .string */
     EXTERN_LABEL,
     ENTRY_LABEL
 } LabelType;
@@ -24,10 +24,11 @@ typedef struct {
     LabelEntry *head;
 } Labels; 
 
+/* - Prototypes */
+
 Labels* labels_create();
 void labels_insert(Labels* labels, char *key, int value, LabelType type);
 LabelEntry* labels_get(Labels* labels, char *key);
-void labels_delete(Labels* labels, char *key);
 void labels_free(Labels* labels);
 void debug_labels(Labels* labels);
 

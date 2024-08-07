@@ -9,6 +9,8 @@
 #include "output.h"
 #include "globals.h"
 #include "structs/labels.h"
+
+
 void free_code_image(machine_word **code_image, int *ic)
 {
     
@@ -28,13 +30,11 @@ void free_data_image(machine_word **data_image, int *dc)
     }
 }
 
-
 int handle_file(char *file_name) {
 
     int ic = INITIAL_IC_VALUE;
     int dc = 0;
     int found_error = 0;
-    PassError error = NO_PASS_ERROR;
     size_t len = strlen(file_name);
 
     char new_file_name[len + 2];
@@ -46,52 +46,50 @@ int handle_file(char *file_name) {
     machine_word *code_image[ASSEMBLER_MAX_CAPACITY];
     machine_word *data_image[ASSEMBLER_MAX_CAPACITY];
 
-    int res = handle_macros(file_name, macros);
-    if (res != NO_MACRO_ERROR)
+    if (handle_macros(file_name, macros) != NO_MACRO_ERROR)
     {
-        log_error("Error in file during pre-processor (Skipping) %s: with code: %d\n", file_name, res);
-        return res;
+        log_error("Error in file during pre-processor (Skipping) %s\n", file_name);
+        return 1;
     }
 
     log_success("Pre-processor finished successfully for file %s\n", file_name);
     list_free(macros);
 
     /* Change the file to the .am file */
-    int i;
-    for (i = 0; i < strlen(file_name) - 1; i++)
+    int i = 0;
+    for (; i < strlen(file_name) - 1; i++)
     {
         new_file_name[i] = file_name[i];
     }
     new_file_name[i] = 'm';
-    new_file_name[i+1] = '\0';
+    new_file_name[i + 1] = '\0';
 
     /* Start first pass */
 
-    error = first_pass(new_file_name, &ic, &dc, labels, macros, code_image, data_image);
-    if (error == NO_PASS_ERROR) {
+    if (first_pass(new_file_name, &ic, &dc, labels, macros, code_image, data_image) == NO_PASS_ERROR) {
         log_success("First pass finished successfully for file %s\n", new_file_name);
     } else {
         found_error = 1;
     }
        
-
     /* Start second pass */
 
-    error = second_pass(new_file_name, macros, labels, extern_usage, code_image, data_image);
-    if (error == NO_PASS_ERROR && !found_error) {
+    if ((second_pass(new_file_name, macros, labels, extern_usage, code_image, data_image) == NO_PASS_ERROR) && !found_error) {
         log_success("Second pass finished successfully for file %s\n", new_file_name);
     } else {
         found_error = 1;
     }
 
+
+
     if (found_error)
     {
-        log_error("Unable to process file %s because of errors.\n", new_file_name);
+        log_error("Unable to process file %s because of one or more errors.\n", new_file_name);
         return 1;
     }
 
-    log_info("Creating output files for %s\n", new_file_name);
 
+    log_info("Creating output files for %s\n", new_file_name);
 
     create_output_files(new_file_name, labels, extern_usage, code_image, data_image, &ic, &dc);
 

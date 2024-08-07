@@ -1,6 +1,6 @@
-#include "command_line.h"
+#include "code_line.h"
 
-void get_operands(char *line, char **operands, int *operandsCount) {
+void get_operands(char *line, char **operands, int *operands_count) {
     int i = 0;
     char *operand = NULL;
 
@@ -21,8 +21,19 @@ void get_operands(char *line, char **operands, int *operandsCount) {
         i++;
         line = NULL; 
     }
-    *operandsCount = i;
+    *operands_count = i;
 }
+
+/* TODO: This exact function also appears in second pass, unite them */
+void free_operands(char **operands, int operands_count) {
+    int i = 0;
+
+    for (; i < operands_count; i++) {
+        safe_free(operands[i]);
+    }
+    safe_free(operands);
+}
+
 
 machine_word *build_single_word(char *source, char *dest, int *ic, int line_num) {
 
@@ -30,19 +41,17 @@ machine_word *build_single_word(char *source, char *dest, int *ic, int line_num)
     Register source_reg, dest_reg;
     machine_word *word; 
 
-    if (*source == '*') {
-        source++;
+    if (*source == '*') { /* Skip the '*' */
+        source++; 
     }
 
-    if (*dest == '*') {
-        dest++;
+    if (*dest == '*') { /* Skip the '*' */
+        dest++; 
     }
 
     source_reg = get_register(source);
     dest_reg = get_register(dest);
     word = (machine_word *) safe_malloc(sizeof(machine_word));
-    word->ic = *ic;
-
 
     if (source_reg == UNKNOWN_REGISTER) {
         log_error("Invalid register in line %d\n\tOperand: %s\n", line_num, source);
@@ -68,8 +77,6 @@ machine_word *build_single_word(char *source, char *dest, int *ic, int line_num)
 machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand, int *ic, int line_num) {
 
     machine_word *word = (machine_word *) safe_malloc(sizeof(machine_word));
-    word->ic = *ic;
-
 
     if (mode == IMMEDIATE) {
         int value = is_integer(operand + 1);
@@ -124,59 +131,44 @@ machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand
 machine_word *build_first_word(Operation op, AddressMode source, AddressMode dest, int *ic, int line_num) {
     machine_word *word = (machine_word *) safe_malloc(sizeof(machine_word));
 
-    word->data = 0;
+    word->data = 0; /* First we reset the word */
 
-    word->data |= (1 << 2);
+    word->data |= (1 << 2); /* Turning 'A' on in each first word */
     word->data |= (op << 11);
-    word->ic = *ic;
+
     if (dest != UNKNOWN_ADDRESS) {
-        word->data |= (1 << (3 + dest));
+        word->data |= (1 << (3 + dest)); 
     }
     if (source != UNKNOWN_ADDRESS) {
         word->data |= (1 << (7 + source));
     }
 
-
     return word;
-
 }   
 
-void free_operands(char **operands, int operandsCount) {
-    int i;
-    for (i = 0; i < operandsCount; i++) {
-        safe_free(operands[i]);
-    }
-    safe_free(operands);
-}
 
 int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, machine_word **code_image) {
     char *operationName = NULL;
     char **operands = safe_malloc(MAX_OPERANDS * sizeof(char *));
     AddressMode dest, source; 
     int i = 0; 
-
     int is_source_reg, is_dest_reg;
-
     Operation op; 
     OperationGroup op_group;
     int operandsCount = 0;
-
     machine_word *first_word = NULL;
     machine_word *second_word = NULL;
     machine_word *third_word = NULL;
-    char label[MAX_LABEL_SIZE + 1];
-    label[MAX_LABEL_SIZE] = '\0';
     int found_error = 0;
 
-    /* Replace the last character with a null terminator */
+    char label[MAX_LABEL_SIZE + 1];
+    label[MAX_LABEL_SIZE] = '\0';
 
     skip_spaces(&line);
 
-    /* #1 - Extract the label, if exists. */
     if (is_label_error(line, line_num, label, 1)) {
         found_error = 1;
-        printf("Returning at: %d\n", line_num);
-        return 1; /* Maybe this shouldn't be a return */
+        return 1;
     }
 
 
@@ -192,12 +184,7 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, mac
 
     }
 
-
     skip_spaces(&line);
-
-    /*
-        #2 - Extract the operation name.
-    */
 
     operationName = (char *) safe_malloc(MAX_LINE_SIZE);
     copy_string_until_space(operationName, line);
@@ -245,11 +232,11 @@ int handle_directive_line(char *line, int line_num, int *ic, Labels *labels, mac
 
 
     if (operandsCount == 1) {
-        dest = find_addressing_mode(operands[0]);
+        dest = address_mode(operands[0]);
         source = UNKNOWN_ADDRESS;
     } else if (operandsCount == 2) {
-        source = find_addressing_mode(operands[0]);
-        dest = find_addressing_mode(operands[1]);
+        source = address_mode(operands[0]);
+        dest = address_mode(operands[1]);
     } else {
         dest = UNKNOWN_ADDRESS;
         source = UNKNOWN_ADDRESS;

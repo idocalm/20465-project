@@ -20,6 +20,8 @@ typedef struct {
     Node *head;
 } List;
 
+/* - Prototypes - */
+
 List* list_create();
 void list_insert_string(List* list, char *key, char *data);
 void list_insert_integer(List* list, char *key, int data);

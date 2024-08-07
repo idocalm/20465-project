@@ -1,47 +1,50 @@
 #include "logs.h"
 
-/*
-    ------- Formatting output -------
+/**
+    * Changes the text color to red [for errors] 
 */
-
-/* Changes the text color to red [for errors] */
 void red_text()
 {
     printf("\033[0;31m");
 }
 
-/* Changes the text color to yellow [for warnings] */
+/**
+    * Changes the text color to yellow [for warnings] 
+*/
 void yellow_text()
 {
     printf("\033[0;33m");
 }
 
-/* Changes the text color to green [for success messages] */
+/**
+    * Changes the text color to green [for success]
+*/
 void green_text()
 {
     printf("\033[0;32m");
 }
 
 
-/* Changes the text color to blue */
+/** 
+    * Changes the text color to blue 
+*/
 void blue_text()
 {
     printf("\033[0;34m");
 }
 
-/* Resets the text color to default */
+/** 
+    * Resets the text color to default 
+*/
 void reset_text()
 {
     printf("\033[0m");
 }
 
-/*
-    ------- Logging functions -------
-*/
 
 /**
     * Logs an error message to the console 
-    * @param format - the message (with format specifiers)
+    * @param format - the message 
     * @param ... - the arguments to be replaced in the format string
  */
 void log_error(char *format, ...)
@@ -57,7 +60,7 @@ void log_error(char *format, ...)
 
 /**
     * Logs a success message to the console 
-    * @param format - the message (with format specifiers)
+    * @param format - the message
     * @param ... - the arguments to be replaced in the format string
  */
 void log_success(char *format, ...)
@@ -73,7 +76,7 @@ void log_success(char *format, ...)
 
 /**
     * Logs a warning message to the console 
-    * @param format - the message (with format specifiers)
+    * @param format - the message 
     * @param ... - the arguments to be replaced in the format string
  */
 void log_warning(char *format, ...)
@@ -89,7 +92,7 @@ void log_warning(char *format, ...)
 
 /**
     * Logs an info message to the console 
-    * @param format - the message (with format specifiers)
+    * @param format - the message
     * @param ... - the arguments to be replaced in the format string
  */
 void log_info(char *format, ...)
@@ -101,10 +104,9 @@ void log_info(char *format, ...)
     va_end(args);
 }
 
-
 /**
     * Logs a debug message to the console 
-    * @param format - the message (with format specifiers)
+    * @param format - the message 
     * @param ... - the arguments to be replaced in the format string
  */
 void log_debug(char *format, ...)
@@ -117,23 +119,3 @@ void log_debug(char *format, ...)
     va_end(args);
     reset_text();
 }
-
-
-void debug_word(machine_word *word) {
-
-    int i;
-
-    if (word == NULL) {
-        return;
-    }
-
-    printf("%d\t\t", word->ic);
-
-    for (i = 14; i >= 0; i--) {
-        printf("%d", (word->data >> i) & 1);
-    }
-
-
-    printf("\n");
-}
-

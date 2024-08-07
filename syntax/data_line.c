@@ -7,7 +7,6 @@ int insert_data_arguments(char *line, int *dc, machine_word **data_image, int li
     int value; 
 
 
-
     if (line[0] == ',') {
         log_error("Invalid data in line %d.\n\t Data starts with a comma\n", line_num);
         return 0;
@@ -23,7 +22,6 @@ int insert_data_arguments(char *line, int *dc, machine_word **data_image, int li
         return 0;
     }
 
-
     /* Check for no double commas */
     while ((operand = strchr(ptr, ',')) != NULL) {
         operand++; 
@@ -35,16 +33,12 @@ int insert_data_arguments(char *line, int *dc, machine_word **data_image, int li
         ptr = operand + 1;
     }   
 
-
     ptr = line;
 
-
     while ((operand = strtok(ptr, ",")) != NULL) {
-        
-
+    
         remove_all_spaces(operand);
         value = is_integer(operand);
-
 
         if (value == NON_VALID_INTEGER) {
             log_error("Invalid data in line %d\n\t. Data '%s' is not an integer\n", line_num,  operand);
@@ -54,8 +48,8 @@ int insert_data_arguments(char *line, int *dc, machine_word **data_image, int li
 
         data_image[*dc] = (machine_word *) safe_malloc(sizeof(machine_word));
         data_image[*dc]->data = value;
-        data_image[*dc]->ic = *dc;
         (*dc)++;
+
         ptr = NULL;
     }
 
@@ -64,20 +58,16 @@ int insert_data_arguments(char *line, int *dc, machine_word **data_image, int li
 }
 
 void insert_string_arguments(char *line, int *dc, machine_word **data_image, int line_num) {
-    
-    
     char *ptr = line; 
     while (*ptr != '\0' && *ptr != '\n' && *ptr != '"') {
         data_image[*dc] = (machine_word *) safe_malloc(sizeof(machine_word));
         data_image[*dc]->data = *ptr;
-        data_image[*dc]->ic = *dc;
         (*dc)++;
         ptr++;
     }
 
     data_image[*dc] = (machine_word *) safe_malloc(sizeof(machine_word));
     data_image[*dc]->data = '\0';
-    data_image[*dc]->ic = *dc;
     (*dc)++;
 }
 
@@ -104,7 +94,7 @@ int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *
 
     Directive directive;
     char *directive_name = NULL;
-    int found_error = 0; /* TODO: Use this variable */
+    int found_error = 0;
     char *ptr = NULL;
     char *label = (char *) safe_malloc(MAX_LABEL_SIZE);
 
