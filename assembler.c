@@ -36,8 +36,8 @@ void handle_file(char *file_name) {
     int dc = 0;
     int found_error = 0;
     size_t len = strlen(file_name);
-
     char new_file_name[len + 2];
+    int i = 0;
 
     Labels *labels = labels_create();
     List *macros = list_create();
@@ -56,7 +56,6 @@ void handle_file(char *file_name) {
     list_free(macros);
 
     /* Change the file to the .am file */
-    int i = 0;
     for (; i < strlen(file_name) - 1; i++)
     {
         new_file_name[i] = file_name[i];
@@ -66,7 +65,7 @@ void handle_file(char *file_name) {
 
     /* Start first pass */
 
-    if (first_pass(new_file_name, &ic, &dc, labels, macros, code_image, data_image) == NO_PASS_ERROR) {
+    if (first_pass(new_file_name, &ic, &dc, labels, code_image, data_image) == NO_PASS_ERROR) {
         log_success("First pass finished successfully for file %s\n", new_file_name);
     } else {
         found_error = 1;
@@ -74,7 +73,7 @@ void handle_file(char *file_name) {
        
     /* Start second pass */
 
-    if ((second_pass(new_file_name, macros, labels, extern_usage, code_image, data_image) == NO_PASS_ERROR) && !found_error) {
+    if ((second_pass(new_file_name, labels, extern_usage, code_image, data_image, found_error) == NO_PASS_ERROR) && !found_error) {
         log_success("Second pass finished successfully for file %s\n", new_file_name);
     } else {
         found_error = 1;

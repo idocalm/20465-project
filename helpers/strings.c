@@ -111,8 +111,8 @@ int is_integer(char *p)
 {
 
     /*
-        Note that an integer in our system can include a '+' or '-' sign 
-        at the beginning.
+        Note that an integer in our system can include a '+' or '-' sign at the beginning.
+        So we first check if the first char is + / - and take it into account
     */
 
     int sign = 1;
@@ -148,7 +148,7 @@ void get_operands(char *line, char **operands, int *operands_count) {
     int i = 0;
     char *operand = NULL;
 
-    /* split the line by ',' */
+    /* split line by ',' */
     while ((operand = strtok(line, ",")) != NULL) {
 
 
@@ -175,4 +175,11 @@ void free_operands(char **operands, int operands_count) {
         safe_free(operands[i]);
     }
     safe_free(operands);
+}
+
+char *get_op_name(char *line) {
+    char *operation_name = (char *) safe_malloc(MAX_LINE_SIZE);
+    copy_string_until_space(operation_name, line);
+    operation_name = (char *) safe_realloc(operation_name, strlen(operation_name) + 1);
+    return operation_name;
 }

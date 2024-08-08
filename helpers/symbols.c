@@ -267,12 +267,27 @@ OperationGroup get_operation_group(Operation op) {
     * @return the addressing mode.
  */
 
-AddressMode address_mode(char *operand) {
-    if (operand[0] == '#' && is_integer(operand + 1) != NON_VALID_INTEGER) { /* Immediate addressing has '#' followed by a number */
+AddressMode address_mode(char *operand, int report_errors, int line_num, int *found_error) {
+    if (operand[0] == '#') { /* Immediate addressing has '#' followed by a number */
+        if (is_integer(operand + 1) == NON_VALID_INTEGER) {
+            if (report_errors) {
+                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid number\n", line_num, operand);
+                *found_error = 1;
+            }
+
+            return UNKNOWN_ADDRESS;
+        }
         return IMMEDIATE; 
-     } else if (get_register(operand) != UNKNOWN_REGISTER) { /* 'Register addressing' has 'r' followed by a number between 0-7 */
+    } else if (get_register(operand) != UNKNOWN_REGISTER) { /* 'Register addressing' has 'r' followed by a number between 0-7 */
         return REGISTER;
-    } else if (operand[0] == '*' && get_register(operand + 1) != UNKNOWN_REGISTER) { /* 'Pointer addressing' has '*' followed by a register */
+    } else if (operand[0] == '*') { /* 'Pointer addressing' has '*' followed by a register */
+        if (get_register(operand + 1) == UNKNOWN_REGISTER) {
+            if (report_errors) {
+                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid register\n", line_num, operand + 1);
+                *found_error = 1;
+            }
+            return UNKNOWN_ADDRESS;
+        }
         return POINTER;
     } else if (is_label(operand)) { /* 'Direct addressing' is a label */
         return DIRECT;

@@ -14,7 +14,7 @@
 
 
 
-PassError first_pass(char *p_fileName, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image);
+PassError first_pass(char *p_fileName, int *ic, int *dc, Labels *labels, machine_word **code_image, machine_word **data_image);
 
 
 #endif 

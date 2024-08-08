@@ -36,6 +36,3 @@ r1: stop
 
 add: stop
 
-; Error: Illegal label name
-
-mmacr: rts

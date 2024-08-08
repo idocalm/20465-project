@@ -26,6 +26,6 @@ int is_integer(char *p);
 
 void get_operands(char *line, char **operands, int *operands_count);
 void free_operands(char **operands, int operands_count);
-
+char *get_op_name(char *line);
 
 #endif

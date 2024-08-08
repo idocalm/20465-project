@@ -50,12 +50,12 @@ void reset_text()
 void log_error(char *format, ...)
 {
     va_list args;
-    red_text();
+    /*red_text();*/
     printf("[ERROR] ");
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    reset_text();
+    /*reset_text();*/
 }
 
 /**
@@ -66,12 +66,12 @@ void log_error(char *format, ...)
 void log_success(char *format, ...)
 {
     va_list args;
-    green_text();
+    /*green_text();*/
     printf("[SUCCESS] ");
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    reset_text();
+    /*reset_text();*/
 }
 
 /**
@@ -82,12 +82,12 @@ void log_success(char *format, ...)
 void log_warning(char *format, ...)
 {
     va_list args;
-    yellow_text();
+    /*yellow_text();*/
     printf("[WARNING] ");
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    reset_text();
+    /*reset_text();*/
 }
 
 /**

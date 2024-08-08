@@ -1,0 +1,41 @@
+----------------------
+[INFO] Received 1 files to process
+[SUCCESS] Replaced macros successfully
+[SUCCESS] Pre-processor finished successfully for file tests/1/test.am
+[INFO] Intialized first pass in file tests/1/test.am
+[ERROR] Invalid data in line 2.
+	 Double commas in data
+[ERROR] Invalid data in line 3.
+	 Data ends with a comma
+[ERROR] Invalid string in line 5
+	Expected: "<string>", got: Hello 
+
+[ERROR] Invalid string in line 6
+	Expected: "<string>", got: Hello"
+
+[ERROR] Invalid string in line 7
+	Expected: "<string>", got: 6
+
+[ERROR] Invalid string in line 8
+	Too many arguments in string
+[WARNING] Instruction .entry in line 18 doesn't support defining a label beforehand ('CHECKA')
+[WARNING] Instruction .extern in line 19 doesn't support defining a label beforehand ('CHECKB')
+[ERROR] Invalid label in line 22
+	Label: CHECKD CHECKE is not a valid label
+[ERROR] Invalid label in line 24
+	Label: CHECKF  is not a valid label
+[ERROR] Invalid label in line 26
+	Label: r1 is not a valid label
+[ERROR] Invalid label in line 28
+	Label: add is not a valid label
+[INFO] Intialized second pass in file tests/1/test.am
+[ERROR] .entry has more then one operands (externous characters / second label) in line 10
+[ERROR] .entry has more then one operands (externous characters / second label) in line 11
+[ERROR] Label already defined as extern in line 14
+	Label: LOOP
+[ERROR] Label referenced in .entry is not defined in line: 18
+	Label: MAIN
+[ERROR] Label referenced in .entry is not defined in line: 21
+	Label: MAIN
+[ERROR] Unable to process file tests/1/test.am because of one or more errors.
+----------------------

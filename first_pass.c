@@ -16,7 +16,7 @@ void update_labels(Labels *labels, int ic)
 }
 
 
-PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image)
+PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, machine_word **code_image, machine_word **data_image)
 {
 
     FILE *input_file = open_file(file_name, "r");
@@ -68,8 +68,8 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
 
         if (found_line_type == 0)
         {
-            /* An actual instruction aka mov, add, stop, etc */
-            if (!handle_code_line(p_line, line_num, ic, labels, code_image))
+            /* aka mov, add, stop operations, etc */
+            if (handle_code_line(p_line, line_num, ic, labels, code_image))
             {
                 found_error = 1;
             }

@@ -15,6 +15,7 @@
     * Create a new blank list structure
     * @return A pointer to the new list structure
 */
+
 List* list_create() {
     List* list = safe_malloc(sizeof(List));
     list->head = NULL;

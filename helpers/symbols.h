@@ -43,6 +43,6 @@ int valid_command_with_operands(Operation op, AddressMode dest, AddressMode sour
 
 
 OperationGroup get_operation_group(Operation op);
-AddressMode address_mode(char *operand);
+AddressMode address_mode(char *operand, int report_errors, int line_num, int *found_error);
 
 #endif

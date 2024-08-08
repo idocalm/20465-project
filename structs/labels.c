@@ -47,7 +47,7 @@ void labels_insert(Labels* labels, char *key, int value, LabelType type) {
 
 /**
     * Find a label by it's key and type in the labels structure
-    * @param labels - a pointer
+    * @param labels - a pointer to the structure
     * @param key - The label name
     * @param type - The label type
     * @return A pointer to the label entry if found or NULL. 
@@ -67,6 +67,12 @@ LabelEntry* labels_get(Labels* labels, char *key, LabelType type) {
 
     return NULL;
 }
+
+/**
+    * Search for a label without relation to the type
+    * @param labels - a pointer to the structure
+    * @param key - The label name 
+ */
 
 LabelEntry* labels_get_any(Labels* labels, char *key) {
     LabelEntry* current = labels->head;
@@ -88,6 +94,7 @@ LabelEntry* labels_get_any(Labels* labels, char *key) {
     * Free the struct itself and everything in it
     * @param labels - A pointer to the structure 
  */
+
 void labels_free(Labels* labels) {
     LabelEntry* current = labels->head;
     LabelEntry* next = NULL;
@@ -160,10 +167,5 @@ void debug_labels(Labels* labels) {
         current = current->next;
     }
 
-
-
-
-
     printf("--- END DEBUG LABELS ---\n");
 }
-
