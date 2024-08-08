@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "../globals.h"
+#include "./memory.h"
 
 #define COMMENT_PREFIX ';'
 #define MIN_12_BIT_NUMBER -2048
@@ -22,5 +23,9 @@ void copy_string_until_space(char *dest, const char *src);
 int non_character(char c);
 int is_comment(char *line);
 int is_integer(char *p);
+
+void get_operands(char *line, char **operands, int *operands_count);
+void free_operands(char **operands, int operands_count);
+
 
 #endif

@@ -28,7 +28,8 @@ typedef struct {
 
 Labels* labels_create();
 void labels_insert(Labels* labels, char *key, int value, LabelType type);
-LabelEntry* labels_get(Labels* labels, char *key);
+LabelEntry* labels_get(Labels* labels, char *key, LabelType type);
+LabelEntry* labels_get_any(Labels* labels, char *key);
 void labels_free(Labels* labels);
 void debug_labels(Labels* labels);
 

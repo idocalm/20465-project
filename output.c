@@ -64,6 +64,7 @@ void build_ob(char *file_name, machine_word **code_image, machine_word **data_im
        machine_word *word = code_image[i];
        char *octal_word = convert_to_octal(word->data);
        char *formatted_address = format_address(i + INITIAL_IC_VALUE);
+       printf("%s %s\n", formatted_address, octal_word);
        fprintf(ob_file, "%s %s\n", formatted_address, octal_word);
        safe_free(octal_word);
        safe_free(formatted_address);
@@ -78,7 +79,10 @@ void build_ob(char *file_name, machine_word **code_image, machine_word **data_im
         fprintf(ob_file, "%s %s\n", formatted_address, octal_word);
         safe_free(octal_word);
         safe_free(formatted_address);
+        fflush(ob_file);
     }
+
+    printf("Wrote to file %s\n", ob_file_name);
 
     close_file(ob_file);
     safe_free(ob_file_name);
@@ -102,8 +106,6 @@ void build_entries(char *file_name, Labels *labels) {
     ent_name[i + 4] = '\0';
 
 
-
-
     ent_file = open_file(ent_name, "w");
 
     while (current != NULL)
@@ -117,7 +119,6 @@ void build_entries(char *file_name, Labels *labels) {
 
     close_file(ent_file);
     safe_free(ent_name);
-
 }
 
 void build_externals(char *file_name, List *extern_usage) {
@@ -136,10 +137,8 @@ void build_externals(char *file_name, List *extern_usage) {
     ext_name[i + 3] = 't';
     ext_name[i + 4] = '\0';
 
-
     ext_file = open_file(ext_name, "w");
 
-    printf("Opened file\n");
     while (current != NULL)
     {
         char *formatted_address = format_address(*(int *) current->data);
@@ -178,6 +177,7 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
 
     build_ob(file_name, code_image, data_image, ic, dc);
 
+    /*
 
     if (contains_entry)
     {
@@ -187,5 +187,5 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
     if (contains_extern)
     {
         build_externals(file_name, extern_usage);
-    }
+    }*/
 }

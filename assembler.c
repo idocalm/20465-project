@@ -30,7 +30,7 @@ void free_data_image(machine_word **data_image, int *dc)
     }
 }
 
-int handle_file(char *file_name) {
+void handle_file(char *file_name) {
 
     int ic = INITIAL_IC_VALUE;
     int dc = 0;
@@ -49,7 +49,7 @@ int handle_file(char *file_name) {
     if (handle_macros(file_name, macros) != NO_MACRO_ERROR)
     {
         log_error("Error in file during pre-processor (Skipping) %s\n", file_name);
-        return 1;
+        return; 
     }
 
     log_success("Pre-processor finished successfully for file %s\n", file_name);
@@ -85,7 +85,7 @@ int handle_file(char *file_name) {
     if (found_error)
     {
         log_error("Unable to process file %s because of one or more errors.\n", new_file_name);
-        return 1;
+        return; 
     }
 
 
@@ -99,8 +99,6 @@ int handle_file(char *file_name) {
     free_data_image(data_image, &dc);
 
     log_success("Finished processing file %s\n", new_file_name);
-
-    return 0;
 }
 
 int main(int argc, char *argv[])

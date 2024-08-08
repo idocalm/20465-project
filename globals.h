@@ -6,12 +6,13 @@
 #define MAX_LINE_SIZE 80
 #define MAX_OPERANDS 2
 #define MAX_LABEL_SIZE 31
-#define NON_VALID_INTEGER 2048 /* Can't be represented in 12 bits */
+#define NON_VALID_INTEGER 2048 /* The maximum number represented in 12 bits */
 
-/* A note: We chose to limit our capacity to 1000 lines of machine words.
-    Which means our assembler can at worst case support 333 lines of assembly. 
+
+/* A note: As page 58 says in the booklet we are allowed to limit the assembler to a certain size.
+           The system only has 4096 cells of memory so we limit ourselves to that size.
 */      
-#define ASSEMBLER_MAX_CAPACITY 1000 
+#define ASSEMBLER_MAX_CAPACITY (4096 - INITIAL_IC_VALUE)
 
 
 typedef struct {
@@ -29,7 +30,7 @@ typedef enum {
     UNKNOWN_ADDRESS = -1,
     IMMEDIATE = 0,
     DIRECT = 1, 
-    RELATIVE = 2, /* Operand is a "pointer" */
+    POINTER = 2, /* a "pointer" to a register */
     REGISTER = 3 /* Operand is a register */ 
 } AddressMode;
 
@@ -55,12 +56,12 @@ typedef enum {
 } Operation;
 
 typedef enum {
-    UNKNOWN_DIRECTIVE = -1,
+    UNKNOWN_INSTRUCTION = -1,
     DATA = 0,
     STRING,
     ENTRY,
     EXTERN
-} Directive;
+} Instruction;
 
 typedef enum {
     UNKNOWN_REGISTER = -1,
@@ -80,7 +81,6 @@ typedef struct {
     int is_external;
 } Label;
 
-/* TODO: Decide if you want to continue with this approach. If so, add the errors here and work with them. If not just return an int. */
 typedef enum {
     NO_PASS_ERROR,
     FOUND_ERROR

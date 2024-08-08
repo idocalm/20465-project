@@ -9,6 +9,7 @@
 
 #include "../globals.h"
 #include "../structs/list.h"
+#include "../structs/labels.h"
 #include "./strings.h"
 
 #define ADDRESSING_MODES 4
@@ -16,12 +17,12 @@
 typedef struct {
     char *name;
     Operation operation;
-} operation_search;
+} operation_table;
 
 typedef struct {
     char *name;
-    Directive directive;
-} directive_search;
+    Instruction instruction;
+} instruction_table;
 
 
 typedef struct {
@@ -33,10 +34,10 @@ typedef struct {
 /* - Prototypes - */
 
 Operation get_operation(char *str);
-Directive get_directive(char *str);
+Instruction get_instruction(char *str);
 Register get_register(char *str);
 int is_reserved_word(char *str);
-int is_label_error(char *label, int line_num, char *dest, int report_error);
+int is_label_error(char *line, int line_num, char *dest, int report_error);
 int is_label(char *label);
 int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source);
 

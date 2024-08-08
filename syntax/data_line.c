@@ -90,10 +90,10 @@ int insert_extern_arguments(char *line, Labels *labels, int line_num) {
 
 }
 
-int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *labels, machine_word **data_image) {
+int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels, machine_word **data_image) {
 
-    Directive directive;
-    char *directive_name = NULL;
+    Instruction instruction;
+    char *instruction_name = NULL;
     int found_error = 0;
     char *ptr = NULL;
     char *label = (char *) safe_malloc(MAX_LABEL_SIZE);
@@ -115,31 +115,30 @@ int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *
 
     skip_spaces(&line);
 
-    directive_name = (char *) safe_malloc(MAX_LINE_SIZE);
-    copy_string_until_space(directive_name, line);
+    instruction_name = (char *) safe_malloc(MAX_LINE_SIZE);
+    copy_string_until_space(instruction_name, line);
 
-    directive = get_directive(directive_name);
+    instruction = get_instruction(instruction_name);
 
-    if (directive != ENTRY && directive != EXTERN && label[0] != '\0') { 
-        LabelEntry *entry = labels_get(labels, label);
-        if (entry != NULL && entry->type == DATA_LABEL) {
+    if (instruction != ENTRY && instruction != EXTERN && label[0] != '\0') { 
+        LabelEntry *entry = labels_get(labels, label, DATA_LABEL);
+        if (entry != NULL) {
             log_error("Label already defined in line %d\n\tLabel: %s\n", line_num, label);
             found_error = 1;
         } else {
             labels_insert(labels, label, *dc, DATA_LABEL);
         }
-        labels_insert(labels, label, *dc, DATA_LABEL);
-    } else if ((directive == ENTRY || directive == EXTERN) && label[0] != '\0') { 
-        log_warning("Directive %s in line %d doesn't support defining a label ('%s')\n", directive_name, line_num, label);
+    } else if ((instruction == ENTRY || instruction == EXTERN) && label[0] != '\0') { 
+        log_warning("Instruction %s in line %d doesn't support defining a label beforehand ('%s')\n", instruction_name, line_num, label);
     }
 
     safe_free(label);
 
-    line += strlen(directive_name);
+    line += strlen(instruction_name);
     
     skip_spaces(&line);
 
-    if (directive == STRING) {
+    if (instruction == STRING) {
         if (*line != '"') {
             log_error("Invalid string in line %d\n\tExpected: \"<string>\", got: %s\n", line_num, line);
             return 0;
@@ -167,7 +166,7 @@ int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *
 
         insert_string_arguments(line, dc, data_image, line_num);
 
-    } else if (directive == DATA) {
+    } else if (instruction == DATA) {
         if (*line == ',') {
             log_error("Invalid data in line %d\n\tExpected: <number>, got: %s\n", line_num, line);
             return 0;
@@ -177,14 +176,14 @@ int handle_instruction_line(char *line, int line_num, int *ic, int *dc, Labels *
             found_error = 1;
         }
 
-    } else if (directive == EXTERN) {
+    } else if (instruction == EXTERN) {
         if (!insert_extern_arguments(line, labels, line_num)) {
             found_error = 1;
         }
         
     }
 
-    safe_free(directive_name);
+    safe_free(instruction_name);
 
     if (found_error) {
         return 0;

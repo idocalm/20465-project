@@ -143,3 +143,36 @@ int is_integer(char *p)
 
     return num * sign;
 }
+
+void get_operands(char *line, char **operands, int *operands_count) {
+    int i = 0;
+    char *operand = NULL;
+
+    /* split the line by ',' */
+    while ((operand = strtok(line, ",")) != NULL) {
+
+
+        if (i == MAX_OPERANDS + 1) {
+            return;
+        }
+
+        operands[i] = (char *) safe_malloc(strlen(operand) + 1);
+
+        remove_all_spaces(operand);
+        strcpy(operands[i], operand);
+
+        operands[i] = (char *) safe_realloc(operands[i], strlen(operands[i]) + 1);
+        i++;
+        line = NULL; 
+    }
+    *operands_count = i;
+}
+
+void free_operands(char **operands, int operands_count) {
+    int i = 0;
+
+    for (; i < operands_count; i++) {
+        safe_free(operands[i]);
+    }
+    safe_free(operands);
+}

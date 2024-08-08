@@ -15,6 +15,7 @@ void update_labels(Labels *labels, int ic)
     }
 }
 
+
 PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *macros, machine_word **code_image, machine_word **data_image)
 {
 
@@ -57,7 +58,7 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
             if (strstr(p_line, instructions[i]) != NULL)
             {
                 /* Instruction aka .data, .string, .entry, .extern */
-                if (!handle_instruction_line(p_line, line_num, ic, dc, labels, data_image)) {
+                if (!handle_data_line(p_line, line_num, ic, dc, labels, data_image)) {
                     found_error = 1;
                 }
                 found_line_type = 1;
@@ -68,7 +69,7 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, List *ma
         if (found_line_type == 0)
         {
             /* An actual instruction aka mov, add, stop, etc */
-            if (!handle_directive_line(p_line, line_num, ic, labels, code_image))
+            if (!handle_code_line(p_line, line_num, ic, labels, code_image))
             {
                 found_error = 1;
             }

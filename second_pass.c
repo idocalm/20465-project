@@ -1,10 +1,9 @@
 #include "second_pass.h"
 
 int replace_label(char *operand, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image, int ic_counter, int line_num) {
-    
-
-    LabelEntry *entry = labels_get(labels, operand);
+    LabelEntry *entry = labels_get_any(labels, operand);
     machine_word *word = NULL; 
+
     if (entry == NULL) {
         log_error("Label referenced in line %d is not defined\n\tLabel: %s\n", line_num, operand);
         return 1;
@@ -16,7 +15,6 @@ int replace_label(char *operand, Labels *labels, List *extern_usage, machine_wor
         log_warning("No word found in code image at index %d in line %d \n", ic_counter, line_num);
         return 0; /* Maybe this should be an error */
     }
-
 
     if (entry->type == EXTERN_LABEL) {
         /* It's currently all 0. Turn on the E bit (first from right )*/
@@ -35,6 +33,7 @@ int replace_label(char *operand, Labels *labels, List *extern_usage, machine_wor
 
 PassError second_pass(char *file_name, List *macros, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image) {
     
+
     FILE *input_file = open_file(file_name, "r");
     
     int line_num = 0;
@@ -78,8 +77,8 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
 
 
         if (label[0] != '\0') {
-            LabelEntry *entry = labels_get(labels, label);
-            if (entry != NULL && entry->type == CODE_LABEL) { 
+            LabelEntry *entry = labels_get(labels, label, CODE_LABEL);
+            if (entry != NULL) { 
                 p_line += strlen(label) + 1;
             }
         }
@@ -111,21 +110,27 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
 
 
 
-            entry = labels_get(labels, value);
-
+            entry = labels_get(labels, value, EXTERN_LABEL);
             if (entry != NULL) {
-                if (entry->type == EXTERN_LABEL) {
-                    log_error("Label already defined as extern in line %d\n\tLabel: %s\n", line_num, value);
-                    found_error = 1;
-                } else if (entry->type == ENTRY_LABEL) {
-                    log_error("Label already defined as entry in line %d\n\tLabel: %s\n", line_num, value);
-                    found_error = 1;
-                    continue;
-                }
+                log_error("Label already defined as extern in line %d\n\tLabel: %s\n", line_num, value);
+                found_error = 1;
+            }
+
+            entry = labels_get(labels, value, ENTRY_LABEL);
+            if (entry != NULL) {
+                log_error("Label already defined as entry in line %d\n\tLabel: %s\n", line_num, value);
+                found_error = 1;
+            }
+
+            entry = labels_get(labels, value, CODE_LABEL);
+            if (entry != NULL) {    
                 labels_insert(labels, value, entry->value, ENTRY_LABEL);
             } else {
-                log_error("Label referenced in .entry directive is not defined in line: %d\n\tLabel: %s\n", line_num, value);
-                found_error = 1;
+                entry = labels_get(labels, value, DATA_LABEL);
+                if (entry == NULL) {
+                    log_error("Label referenced in .entry is not defined in line: %d\n\tLabel: %s\n", line_num, value);
+                    found_error = 1;
+                }
             }
 
             safe_free(value);
@@ -144,7 +149,6 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
         operands = (char **) safe_malloc(sizeof(char *) * MAX_OPERANDS);
         operands_count = 0;
 
-
         get_operands(p_line, operands, &operands_count);
 
         if (operands_count == 1) {
@@ -160,8 +164,8 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
 
         ic_counter += 1;
 
-        is_source_reg = source == REGISTER || source == RELATIVE;
-        is_dest_reg = dest == REGISTER || dest == RELATIVE;
+        is_source_reg = source == REGISTER || source == POINTER;
+        is_dest_reg = dest == REGISTER || dest == POINTER;
 
         if (is_source_reg && is_dest_reg) {
             ic_counter += 1;
@@ -190,11 +194,7 @@ PassError second_pass(char *file_name, List *macros, Labels *labels, List *exter
         }
 
         /* Free all operands */
-        int i;
-        for (i = 0; i < operands_count; i++) {
-            safe_free(operands[i]);
-        }
-        safe_free(operands);
+        free_operands(operands, operands_count);
         safe_free(operation_name);
 
     }

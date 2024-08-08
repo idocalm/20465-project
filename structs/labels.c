@@ -48,12 +48,27 @@ void labels_insert(Labels* labels, char *key, int value, LabelType type) {
 /**
     * Find a label by it's key and type in the labels structure
     * @param labels - a pointer
-    * @param key - The label's name
+    * @param key - The label name
+    * @param type - The label type
     * @return A pointer to the label entry if found or NULL. 
 */
 
-/* TODO: Search and compare not only by key but also by TYPE!!!! This is NOT good */
-LabelEntry* labels_get(Labels* labels, char *key) {
+LabelEntry* labels_get(Labels* labels, char *key, LabelType type) {
+    LabelEntry* current = labels->head;
+
+    /* Compare labels in the list until you find the matching one and return it */
+
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0 && current->type == type) {
+            return current;
+        }
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+LabelEntry* labels_get_any(Labels* labels, char *key) {
     LabelEntry* current = labels->head;
 
     /* Compare labels in the list until you find the matching one and return it */
@@ -67,6 +82,7 @@ LabelEntry* labels_get(Labels* labels, char *key) {
 
     return NULL;
 }
+
 
 /**
     * Free the struct itself and everything in it

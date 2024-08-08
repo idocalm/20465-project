@@ -9,7 +9,7 @@
 Operation get_operation(char *str)
 {
     int i;
-    operation_search operations[] = {
+    operation_table operations[] = {
         {"mov", MOV},
         {"cmp", CMP},
         {"add", ADD},
@@ -27,11 +27,11 @@ Operation get_operation(char *str)
         {"rts", RTS},
         {"stop", STOP}
     };
-    int length = sizeof(operations) / sizeof(operation_search);
+    int length = sizeof(operations) / sizeof(operation_table);
 
     for (i = 0; i < length; i++)
     {
-        /* Check if the string is equal to the directive name */
+        /* Check if the string is equal to the instruction name */
         if (strcmp(str, operations[i].name) == 0)
         {
             return operations[i].operation;
@@ -43,33 +43,33 @@ Operation get_operation(char *str)
 }
 
 /**
-    * Finds the directive command that matches a string (if such exists).
+    * Finds the instruction command that matches a string (if such exists).
     * @param str - the string. 
-    * @return the directive that matches the string.
+    * @return the instruction that matches the string.
 */
 
-Directive get_directive(char *str)
+Instruction get_instruction(char *str)
 {
     int i; 
-    directive_search directives[] = {
+    instruction_table instructions[] = {
         {".data", DATA},
         {".string", STRING},
         {".entry", ENTRY},
         {".extern", EXTERN}
     };
 
-    int length = sizeof(directives) / sizeof(directive_search);
+    int length = sizeof(instructions) / sizeof(instruction_table);
     for (i = 0; i < length; i++)
     {
-        /* Check if the string is equal to the directive name */
-        if (strcmp(str, directives[i].name) == 0)
+        /* Check if the string is equal to the inst' name */
+        if (strcmp(str, instructions[i].name) == 0)
         {
-            return directives[i].directive;
+            return instructions[i].instruction;
         }
     }
 
     /* Return not found */
-    return UNKNOWN_DIRECTIVE;
+    return UNKNOWN_INSTRUCTION;
 }
 
 /**
@@ -106,8 +106,8 @@ Register get_register(char *str)
 
 int is_reserved_word(char *str)
 {
-    /* Reserved words are any operations, registers or directives */
-    return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_directive(str) != UNKNOWN_DIRECTIVE;
+    /* Reserved words are any operations, registers or instructions */
+    return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_instruction(str) != UNKNOWN_INSTRUCTION;
 }
 
 /**
@@ -146,6 +146,7 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
             dest[0] = '\0'; /* Signal it's not a definition */
             return 1; /* There's an error */
         } 
+
         return 0; /* No error */
     }
     dest[0] = '\0'; /* Signal it's not a definition */
@@ -161,8 +162,6 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
 int is_label(char *label) {
     char *ptr = label;
     
-    /* TODO FIX THIS */
-    int isMacro = 0;
 
     /* Label must contain only letters and digits */
     while (*ptr != '\0' && *ptr != '\n') {
@@ -173,7 +172,7 @@ int is_label(char *label) {
     }
 
     /* A label can't either be a reserved word or be more then 31 chars long */
-    return is_reserved_word(label) == 0 && strlen(label) <= MAX_LABEL_SIZE && !isMacro;
+    return is_reserved_word(label) == 0 && strlen(label) <= MAX_LABEL_SIZE; 
 }
 
 
@@ -273,8 +272,8 @@ AddressMode address_mode(char *operand) {
         return IMMEDIATE; 
      } else if (get_register(operand) != UNKNOWN_REGISTER) { /* 'Register addressing' has 'r' followed by a number between 0-7 */
         return REGISTER;
-    } else if (operand[0] == '*' && get_register(operand + 1) != UNKNOWN_REGISTER) { /* 'Relative addressing' has '*' followed by a register */
-        return RELATIVE;
+    } else if (operand[0] == '*' && get_register(operand + 1) != UNKNOWN_REGISTER) { /* 'Pointer addressing' has '*' followed by a register */
+        return POINTER;
     } else if (is_label(operand)) { /* 'Direct addressing' is a label */
         return DIRECT;
     }
