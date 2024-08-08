@@ -1,46 +1,13 @@
 #include "output.h"
 
-#define OCTAL_SIZE 5
-#define ADDRESS_SIZE 4
-
-char *convert_to_octal(int data) {
-    char *octal = safe_malloc(OCTAL_SIZE + 1);
-    int i = 0;
-    int mask = 0x7;
-
-    for (i = 0; i < OCTAL_SIZE; i++)
-    {
-        octal[i] = '0';
-    }
-    octal[OCTAL_SIZE] = '\0';
-
-    for (i = 0; i < OCTAL_SIZE; i++)
-    {
-        octal[OCTAL_SIZE - i - 1] = (data & mask) + '0';
-        data >>= 3;
-    }
-
-
-    return octal;
-}
-
-char *format_address(int address) {
-    int temp = address;
-    int i;
-    char *res = safe_malloc(ADDRESS_SIZE + 1);
-    memset(res, '0', ADDRESS_SIZE);
-
-    res[ADDRESS_SIZE] = '\0';
-
-    for (i = ADDRESS_SIZE - 1; i >= 0; i--)
-    {
-        res[i] = (temp % 10) + '0';
-        temp /= 10;
-    }
-
-    return res;
-}
-
+/**
+ * @brief Builds the ob file
+ * @param ob_file a FILE* to write into 
+ * @param code_image The code image
+ * @param data_image The data image
+ * @param ic The instruction counter
+ * @param dc The data counter
+*/
 void build_ob(FILE *ob_file, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
     int i = 0;
 
@@ -50,24 +17,24 @@ void build_ob(FILE *ob_file, machine_word **code_image, machine_word **data_imag
     {
        machine_word *word = code_image[i];
        char *octal_word = convert_to_octal(word->data);
-       char *formatted_address = format_address(i + INITIAL_IC_VALUE);
-       fprintf(ob_file, "%s %s\n", formatted_address, octal_word);
+       fprintf(ob_file, "%04d %s\n", i + INITIAL_IC_VALUE, octal_word);
        safe_free(octal_word);
-       safe_free(formatted_address);
     }
 
     for (i = 0; i < *dc; i++)
     {
         machine_word *word = data_image[i];
         char *octal_word = convert_to_octal(word->data);
-        char *formatted_address = format_address(i + *ic);
-        fprintf(ob_file, "%s %s\n", formatted_address, octal_word);
+        fprintf(ob_file, "%04d %s\n", i + *ic, octal_word);
         safe_free(octal_word);
-        safe_free(formatted_address);
-        fflush(ob_file);
     }
 }
 
+/**
+ * @brief Builds the entries file
+ * @param ent_file a FILE* to write into 
+ * @param labels The labels struct
+*/
 void build_entries(FILE *ent_file, Labels *labels) {
     LabelEntry *current = labels->head;
 
@@ -75,39 +42,54 @@ void build_entries(FILE *ent_file, Labels *labels) {
     {
         if (current->type == ENTRY_LABEL)
         {
-            fprintf(ent_file, "%s %d\n", current->key, current->value);
+            fprintf(ent_file, "%s %04d\n", current->key, current->value);
         }
         current = current->next;
     }
 
 }
 
+/**
+ * @brief Builds the externals file
+ * @param ext_file a FILE* to write into 
+ * @param extern_usage The list of externals with where they were used
+*/
+
 void build_externals(FILE *ext_file, List *extern_usage) {
-    int i = 0;
     Node *current = extern_usage->head;
 
-    while (current != NULL)
+    while (current != NULL) /* Iterate over the different externals that are being used */
     {
-        char *formatted_address = format_address(*(int *) current->data);
-
-        fprintf(ext_file, "%s %s\n", current->key, formatted_address);
+        /* Write into the file in a key-data format (key will be a 4 digit number)*/
+        fprintf(ext_file, "%s %04d\n", current->key, *(int *) current->data);
         current = current->next;
-        safe_free(formatted_address);
     }
 }
 
+/**
+    * @brief Creates the output files
+    * @param file_name The name of the file
+    * @param labels The labels struct
+    * @param extern_usage The list of externals with where they were used
+    * @param code_image The code image
+    * @param data_image The data image
+    * @param ic The instruction counter
+    * @param dc The data counter
+*/
+
 void create_output_files(char *file_name, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
 
-    int contains_entry = 0;
-    int contains_extern = 0;
+    int contains_entry = 0; /* Do we need to create an .entry file? */
+    int contains_extern = 0; /* Do we need to create an .extern file? */
     int i = 0;
-    LabelEntry *head = labels->head;
-    LabelEntry *current = head;
+    LabelEntry *current = labels->head; /* The current label entry (we would soon iterate over this). */
+    FILE *ob_file, *ent_file, *ext_file; /* The output files */
 
     char *ent_file_name = safe_malloc(strlen(file_name) + 1);
     char *ext_file_name = safe_malloc(strlen(file_name) + 1);
     char *ob_file_name = safe_malloc(strlen(file_name) + 2);
 
+    /* Copy the file name until the . */
     for (; i < strlen(file_name) && file_name[i] != '.'; i++)
     {
         ent_file_name[i] = file_name[i];
@@ -115,6 +97,7 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
         ob_file_name[i] = file_name[i];
     }
 
+    /* Add the file extensions (according to the file type) */
     ent_file_name[i] = '.';
     ext_file_name[i] = '.';
     ob_file_name[i] = '.';
@@ -134,13 +117,14 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
     ob_file_name[i + 2] = 'b';
     ob_file_name[i + 3] = '\0';
 
+    /* Open the files */
 
-    debug_labels(labels);
+    ob_file = open_file(ob_file_name, "w");
+    ent_file = open_file(ent_file_name, "w");
+    ext_file = open_file(ext_file_name, "w");
 
-    FILE *ob_file = open_file(ob_file_name, "w");
-    FILE *ent_file = open_file(ent_file_name, "w");
-    FILE *ext_file = open_file(ext_file_name, "w");
 
+    /* Check what files need to be created */
 
     while (current != NULL)
     {
@@ -166,4 +150,14 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
     {
         build_externals(ext_file, extern_usage);
     }
+
+    /* Close the files & free the memory */
+
+    fclose(ob_file);
+    fclose(ent_file);
+    fclose(ext_file);
+
+    safe_free(ent_file_name);
+    safe_free(ext_file_name);
+    safe_free(ob_file_name);
 }

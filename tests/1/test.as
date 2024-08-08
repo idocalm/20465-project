@@ -1,4 +1,3 @@
-
 ; Error: double , in .data - DETECTED
 .data 6,, -9 
 ; Error: extra , in .data - DETECTED

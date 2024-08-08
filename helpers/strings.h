@@ -6,12 +6,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../globals.h"
+#include "../definitions.h"
 #include "./memory.h"
 
 #define COMMENT_PREFIX ';'
 #define MIN_12_BIT_NUMBER -2048
 #define MAX_12_BIT_NUMBER 2047
+#define OCTAL_SIZE 5
 
 void skip_non_spaces(char **p);
 void skip_spaces(char **p);
@@ -25,7 +26,6 @@ int is_comment(char *line);
 int is_integer(char *p);
 
 void get_operands(char *line, char **operands, int *operands_count);
-void free_operands(char **operands, int operands_count);
-char *get_op_name(char *line);
+char *convert_to_octal(int data);
 
 #endif

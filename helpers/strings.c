@@ -4,8 +4,8 @@
 */
 
 /**
-    * Skips all non-spaces at the beginning of a given string.
-    * @param p - the pointer to the string.
+    * @brief Skips all non-spaces at the beginning of a given string
+    * @param p - the pointer to the string
 */
 void skip_non_spaces(char **pp_line) {
     while (**pp_line && !isspace(**pp_line)) {
@@ -16,8 +16,8 @@ void skip_non_spaces(char **pp_line) {
 
 
 /**
-    * Skips all spaces at the beginning of a given string.
-    * @param p - the pointer to the string.
+    * @brief Skips all spaces at the beginning of a given string
+    * @param p - the pointer to the string
 */
 void skip_spaces(char **p)
 {
@@ -28,9 +28,9 @@ void skip_spaces(char **p)
 }
 
 /**
-    * Checks if a given string is composed only of spaces.
-    * @param str - the string.
-    * @return 1 if the string is empty, 0 otherwise.
+    * @brief Checks if a given string is composed only of space
+    * @param str - the string
+    * @return 1 if the string is empty, 0 otherwise
 */
 
 int is_empty(char *str)
@@ -47,8 +47,8 @@ int is_empty(char *str)
 }
 
 /**
-    * Trims all spaces from the beginning and ending of a string.
-    * @param p - the pointer to the string.
+    * @brief Trims all spaces from the beginning and ending of a string
+    * @param p - the pointer to the string
 */
 
 void remove_all_spaces(char *p) {
@@ -72,9 +72,9 @@ void remove_all_spaces(char *p) {
 }
 
 /**
-    * Copies a string from the source to the destination until a space is found.
-    * @param dest - the destination string.
-    * @param src - the source string.
+    * @brief Copies a string from the source to the destination until a space is found
+    * @param dest - the destination string
+    * @param src - the source string
 */
 
 void copy_string_until_space(char *dest, const char *src)
@@ -91,9 +91,9 @@ void copy_string_until_space(char *dest, const char *src)
 }
 
 /**
-    * Checks if a given string is a comment.
-    * @param p_line - the pointer to the string.
-    * @return 1 if the string is a comment, 0 otherwise.
+    * @brief Checks if a given string is a comment
+    * @param p_line - the pointer to the string
+    * @return 1 if the string is a comment, 0 otherwise
 */
 
 int is_comment(char *p_line) {
@@ -102,9 +102,9 @@ int is_comment(char *p_line) {
 }
 
 /**
-    * Checks if a given string is an integer that can be represented in 12 bits.
-    * @param p - the pointer to the string.
-    * @return the integer value if the string is an integer, 
+    * @brief Checks if a given string is an integer that can be represented in 12 bits
+    * @param p - the pointer to the string
+    * @return the integer value if the string is an integer or NON_VALID_INTEGER 
  */
 
 int is_integer(char *p)
@@ -144,6 +144,13 @@ int is_integer(char *p)
     return num * sign;
 }
 
+/**
+    * @brief Splits a given string into operands
+    * @param line - the string
+    * @param operands - the array of operands
+    * @param operands_count - the number of operands
+*/
+
 void get_operands(char *line, char **operands, int *operands_count) {
     int i = 0;
     char *operand = NULL;
@@ -168,18 +175,30 @@ void get_operands(char *line, char **operands, int *operands_count) {
     *operands_count = i;
 }
 
-void free_operands(char **operands, int operands_count) {
+/**
+ * @brief Converts a given integer to an octal string
+ * @param data - the integer to be converted
+ * @return a string representing the octal value of the integer
+ */
+
+ 
+char *convert_to_octal(int data) {
+    char *octal = safe_malloc(OCTAL_SIZE + 1);
     int i = 0;
+    int mask = 0x7;
 
-    for (; i < operands_count; i++) {
-        safe_free(operands[i]);
+    for (i = 0; i < OCTAL_SIZE; i++)
+    {
+        octal[i] = '0';
     }
-    safe_free(operands);
-}
+    octal[OCTAL_SIZE] = '\0';
 
-char *get_op_name(char *line) {
-    char *operation_name = (char *) safe_malloc(MAX_LINE_SIZE);
-    copy_string_until_space(operation_name, line);
-    operation_name = (char *) safe_realloc(operation_name, strlen(operation_name) + 1);
-    return operation_name;
+    for (i = 0; i < OCTAL_SIZE; i++)
+    {
+        octal[OCTAL_SIZE - i - 1] = (data & mask) + '0';
+        data >>= 3;
+    }
+
+
+    return octal;
 }

@@ -1,0 +1,21 @@
+----------------------
+  #####                  #      #####    #####   #######  #     #  ######   #        #######  ######  
+ #     #                # #    #     #  #     #  #        ##   ##  #     #  #        #        #     # 
+ #                     #   #   #        #        #        # # # #  #     #  #        #        #     # 
+ #                    #     #   #####    #####   #####    #  #  #  ######   #        #####    ######  
+ #                    #######        #        #  #        #     #  #     #  #        #        #   #   
+ #     #              #     #  #     #  #     #  #        #     #  #     #  #        #        #    #  
+  #####               #     #   #####    #####   #######  #     #  ######   #######  #######  #     # 
+ ----- Made by: Ido Calman & Roei Faiman -----
+ ----- Semester: 2024B -----
+----------------------
+[INFO] Received 1 files to process
+[SUCCESS] Replaced macros successfully
+[SUCCESS] Pre-processor finished successfully for file tests/2/test.am
+[INFO] Intialized first pass in file tests/2/test.am
+[SUCCESS] First pass finished successfully for file tests/2/test.am
+[INFO] Intialized second pass in file tests/2/test.am
+[SUCCESS] Second pass finished successfully for file tests/2/test.am
+[INFO] Creating output files for tests/2/test.am
+[SUCCESS] Finished processing file ÷¯î·FV
+----------------------

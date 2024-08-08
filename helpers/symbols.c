@@ -1,7 +1,7 @@
 #include "symbols.h"
 
 /**
-    * Finds the matching operation to a string (if such exists).
+    * @brief Finds the matching operation to a string (if such exists).
     * @param str - the string. 
     * @return the operation that matches the string.
 */
@@ -43,7 +43,7 @@ Operation get_operation(char *str)
 }
 
 /**
-    * Finds the instruction command that matches a string (if such exists).
+    * @brief Finds the instruction command that matches a string (if such exists).
     * @param str - the string. 
     * @return the instruction that matches the string.
 */
@@ -73,7 +73,7 @@ Instruction get_instruction(char *str)
 }
 
 /**
-    * Finds responding register to a string (if exists).
+    * @brief Finds responding register to a string (if exists).
     * @param str - the string
     * @return the register that corresponds to the string.
 */
@@ -99,7 +99,7 @@ Register get_register(char *str)
 
 
 /**
-    * Checks if a string is a reserved word. 
+    * @brief Checks if a string is a reserved word. 
     * @param str - the string
     * @return 1 if the string is a reserved word, 0 otherwise.
 */
@@ -111,11 +111,11 @@ int is_reserved_word(char *str)
 }
 
 /**
-    * Checks if the beginning of a line has an error related to a label definition.
-    * @param line - the line.
-    * @param line_num - the line number (That's used to report any errors).
-    * @param dest - a string that was malloced to store the label.
-    * @param report_error - indicates if the function should report an error if it sees one.
+    * @brief Checks if the beginning of a line has an error related to a label definition
+    * @param line - the line
+    * @param line_num - the line number (That's used to report any errors)
+    * @param dest - a string that was malloced to store the label
+    * @param report_error - indicates if the function should report an error if it sees one
  */
 
 int is_label_error(char *line, int line_num, char *dest, int report_error) {
@@ -126,9 +126,9 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
     ptr = line;
 
     for (; *ptr && *ptr != ':' && *ptr != '\n'; j++, ptr++) {
-        if (j > MAX_LINE_SIZE) {
+        if (j > MAX_LABEL_SIZE) {
             if (report_error) {
-                log_error("Invalid label in line %d\n\tLabel: %s is too long\n", line_num, dest);
+                log_error("Invalid label '%s' in line %d\n\tThe label is too long. The maximum size is: %d.\n", dest, line_num, MAX_LABEL_SIZE);
             }
             dest[0] = '\0'; /* Signal it's not a definition */
 
@@ -141,7 +141,7 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
     if (*ptr == ':') {
         if (!is_label(dest)) { /* Use is_label to check if the label itself is ok */
             if (report_error) {
-                log_error("Invalid label in line %d\n\tLabel: %s is not a valid label\n", line_num, dest);
+                log_error("Invalid label '%s' in line %d.\n", dest, line_num);
             }
             dest[0] = '\0'; /* Signal it's not a definition */
             return 1; /* There's an error */
@@ -155,8 +155,8 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
 }
 
 /**
-    * Checks if a string could be used as a label.
-    * @param label - the string.
+    * @brief Checks if a string could be used as a label
+    * @param label - the string
     * @return 1 if the label is valid, 0 otherwise.
  */
 int is_label(char *label) {
@@ -177,7 +177,7 @@ int is_label(char *label) {
 
 
 /**
-    * Checks if a command is valid with a set of given addressing modes as operands.
+    * @brief Checks if a command is valid with a set of given addressing modes as operands.
     * @param op - the operation to check.
     * @param dest - the destination addressing mode. (if exists)
     * @param source - the source addressing mode. (if exists)
@@ -262,7 +262,7 @@ OperationGroup get_operation_group(Operation op) {
 
 
 /**
-    * Finds the addressing mode of an operand.
+    * @brief Finds the addressing mode of an operand.
     * @param operand - the operand.
     * @return the addressing mode.
  */
@@ -271,7 +271,7 @@ AddressMode address_mode(char *operand, int report_errors, int line_num, int *fo
     if (operand[0] == '#') { /* Immediate addressing has '#' followed by a number */
         if (is_integer(operand + 1) == NON_VALID_INTEGER) {
             if (report_errors) {
-                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid number\n", line_num, operand);
+                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid number.\n", line_num, operand);
                 *found_error = 1;
             }
 
@@ -283,7 +283,7 @@ AddressMode address_mode(char *operand, int report_errors, int line_num, int *fo
     } else if (operand[0] == '*') { /* 'Pointer addressing' has '*' followed by a register */
         if (get_register(operand + 1) == UNKNOWN_REGISTER) {
             if (report_errors) {
-                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid register\n", line_num, operand + 1);
+                log_error("Invalid addressing mode in line %d\n\tOperand: %s is not a valid register.\n", line_num, operand + 1);
                 *found_error = 1;
             }
             return UNKNOWN_ADDRESS;
@@ -294,4 +294,32 @@ AddressMode address_mode(char *operand, int report_errors, int line_num, int *fo
     }
 
     return UNKNOWN_ADDRESS;
+}
+
+
+/**
+    * @brief Finds the operation name in a line
+    * (mov, cmp, add, etc)
+    * @param line - the line
+    * @return the operation name
+ */
+
+char *get_op_name(char *line) {
+    char *operation_name = (char *) safe_malloc(MAX_LINE_SIZE);
+    copy_string_until_space(operation_name, line);
+    operation_name = (char *) safe_realloc(operation_name, strlen(operation_name) + 1);
+    return operation_name;
+}
+
+/**
+    * @brief Finds the instruction name in a line
+    * (.entry .extern .data .string)
+    * @param line - the line
+ */
+
+char *get_instruction_name(char *line) {
+    char *instruction_name = (char *) safe_malloc(MAX_LINE_SIZE);
+    copy_string_until_space(instruction_name, line);
+    instruction_name = (char *) safe_realloc(instruction_name, strlen(instruction_name) + 1);
+    return instruction_name;
 }

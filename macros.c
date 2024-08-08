@@ -140,7 +140,7 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
         p_line = line;
 
         if (strlen(p_line) > MAX_LINE_SIZE) {
-            log_error("Line is too long: \n\tLine %d contains %ld characters while the maximum is %d\n", line_num, strlen(p_line), MAX_LINE_SIZE); 
+            log_error("Line is too long.\n\tLine %d contains %ld characters while the maximum is only %d.\n", line_num, strlen(p_line), MAX_LINE_SIZE); 
             found_error = 1;
             continue;
         }
@@ -169,6 +169,13 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 skip_spaces(&p_search);
 
                 copy_string_until_space(macro_name, p_search);
+
+                if (strlen(macro_name) <= 0) {
+                    log_error("Invalid macro definition in line %d.\n\t The macro name is missing\n.", line_num);
+                    found_error = 1;
+                    continue;
+                }
+
                 macro_name = (char *) safe_realloc(macro_name, strlen(macro_name) + 1); /* Reallocate the exact size */
                 macro_name[strlen(macro_name)] = '\0';
 
@@ -182,30 +189,25 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 macro_content[0] = '\0';
                 macroContentSize = 1; 
 
-                if (strlen(macro_name) <= 0) {
-                    log_error("Invalid macro definition in line %d\n\t Macro name is missing\n", line_num);
-                    found_error = 1;
-                    continue;
-                }
 
                 /* Make sure there are no non-space characters after the macro name */
                 p_search += strlen(macro_name);
                 skip_spaces(&p_search);
                 if (*p_search != '\0' && *p_search != '\n') {
-                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro name\n", line_num);
+                    log_error("Invalid macro definition in line %d.\n\t Extraneous characters appear after the macro name.\n", line_num);
                     found_error = 1;
                     continue;
                 }
 
                 if (is_reserved_word(macro_name)) {
-                    log_error("Invalid macro name in line %d\n\t Macro name %s is a reserved word\n", line_num, macro_name);
+                    log_error("Invalid macro name in line %d.\n\t Macro name '%s' is also a reserved word.\n", line_num, macro_name);
                     found_error = 1;
                     continue;
                 }
 
                 /* Check if the macro is already defined */
                 if (list_get(macros, macro_name) != NULL) {
-                    log_error("Multiple macro globals in line %d\n\t Macro %s is already defined\n", line_num, macro_name);
+                    log_error("Multiple macro definitions in line %d.\n\t Macro '%s' was already defined in the file.\n", line_num, macro_name);
                     found_error = 1;
                     continue;
                 }
@@ -224,7 +226,7 @@ MacroErrors extract_macros(FILE *input_file, List *macros) {
                 skip_spaces(&p_search);
 
                 if (*p_search != '\0' && *p_search != '\n') {
-                    log_error("Invalid macro definition in line %d\n\t Extraneous characters after macro end\n", line_num);
+                    log_error("Invalid macro definition in line %d.\n\t Extraneous characters after macro end mark 'endmacr'.\n", line_num);
                     found_error = 1;
                     continue;
                 }

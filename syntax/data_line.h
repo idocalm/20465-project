@@ -5,7 +5,11 @@
 #include "../structs/labels.h"
 #include "../helpers/symbols.h"
 #include "../helpers/strings.h"
-#include "../globals.h"
+#include "../definitions.h"
+
+/* - Prototypes - */
+
+void add_data_to_image(machine_word **data_image, int *dc, int data);
 
 int insert_data_arguments(char *line, int *dc, machine_word **data_image, int line_num);
 void insert_string_arguments(char *line, int *dc, machine_word **data_image, int line_num);

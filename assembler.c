@@ -7,53 +7,63 @@
 #include "first_pass.h"
 #include "second_pass.h"
 #include "output.h"
-#include "globals.h"
+#include "definitions.h"
 #include "structs/labels.h"
+#include "helpers/memory.h"
 
+/**
+    * @brief A small welcome message from us (:
+*/
 
-void free_code_image(machine_word **code_image, int *ic)
-{
+void welcome_message() {
+
+    printf("  #####                  #      #####    #####   #######  #     #  ######   #        #######  ######  \n");
+    printf(" #     #                # #    #     #  #     #  #        ##   ##  #     #  #        #        #     # \n");
+    printf(" #                     #   #   #        #        #        # # # #  #     #  #        #        #     # \n");
+    printf(" #                    #     #   #####    #####   #####    #  #  #  ######   #        #####    ######  \n");
+    printf(" #                    #######        #        #  #        #     #  #     #  #        #        #   #   \n");
+    printf(" #     #              #     #  #     #  #     #  #        #     #  #     #  #        #        #    #  \n");
+    printf("  #####               #     #   #####    #####   #######  #     #  ######   #######  #######  #     # \n");
+
+    printf(" ----- Made by: Ido Calman & Roei Faiman -----\n");
+    printf(" ----- Semester: 2024B -----\n");
     
-    int i = 0;
-    for (i = 0; i < *ic - INITIAL_IC_VALUE; i++)
-    {
-        safe_free(code_image[i]);
-    }
 }
 
-void free_data_image(machine_word **data_image, int *dc)
-{
-    int i = 0;
-    for (i = 0; i < *dc; i++)
-    {
-        safe_free(data_image[i]);
-    }
-}
+
+/**
+    * @brief Main function to handle a file through all stages
+    * @param file_name The name of the file (without .as)
+*/
 
 void handle_file(char *file_name) {
 
-    int ic = INITIAL_IC_VALUE;
-    int dc = 0;
-    int found_error = 0;
-    size_t len = strlen(file_name);
-    char new_file_name[len + 2];
+    int ic = INITIAL_IC_VALUE; /* Assigning an instruction counter for this file */
+    int dc = 0; /* Assigning a data counter for this file */
+    int found_error = 0; /* Flag to indicate if an error was found anywhere */
+    size_t len = strlen(file_name); 
+    char *new_file_name = (char *)safe_malloc(len + 2); /* The new file name with .am */
     int i = 0;
 
-    Labels *labels = labels_create();
-    List *macros = list_create();
-    List *extern_usage = list_create();
+    Labels *labels = labels_create(); /* Label table (for first & second pass )*/
+    List *macros = list_create(); /* Macro list (for pre-processor )*/
+    List *extern_usage = list_create(); /* Extern usage (mainly for second pass and .ext output file)*/
 
-    machine_word *code_image[ASSEMBLER_MAX_CAPACITY];
-    machine_word *data_image[ASSEMBLER_MAX_CAPACITY];
+    machine_word *code_image[ASSEMBLER_MAX_CAPACITY]; /* Code image of the machine */
+    machine_word *data_image[ASSEMBLER_MAX_CAPACITY]; /* Data image of the machine */
 
+    /* STAGE 1: Pre-processor (macro extracting and replacing ) */
     if (handle_macros(file_name, macros) != NO_MACRO_ERROR)
     {
-        log_error("Error in file during pre-processor (Skipping) %s\n", file_name);
+        /* We can't continue after an error in the macro stage because there's no .am file */
+        log_error("One or more errors were found in file '%s' during pre-processor. Moving to the next file.\n", file_name);
         return; 
     }
 
-    log_success("Pre-processor finished successfully for file %s\n", file_name);
+    /* We no longer need the macros so we can free it */
+    log_success("Pre-processor finished successfully for file '%s'\n", file_name);
     list_free(macros);
+
 
     /* Change the file to the .am file */
     for (; i < strlen(file_name) - 1; i++)
@@ -80,10 +90,14 @@ void handle_file(char *file_name) {
     }
 
 
-
     if (found_error)
     {
         log_error("Unable to process file %s because of one or more errors.\n", new_file_name);
+        labels_free(labels);
+        safe_free(new_file_name);
+        list_free(extern_usage);
+        free_code_image(code_image, ic);
+        free_data_image(data_image, dc);
         return; 
     }
 
@@ -92,14 +106,23 @@ void handle_file(char *file_name) {
 
     create_output_files(new_file_name, labels, extern_usage, code_image, data_image, &ic, &dc);
 
+    /* Free the memory */
     labels_free(labels);
     list_free(extern_usage);
-    free_code_image(code_image, &ic);
-    free_data_image(data_image, &dc);
+    free_code_image(code_image, ic);
+    free_data_image(data_image, dc);
 
     log_success("Finished processing file %s\n", new_file_name);
+    safe_free(new_file_name);
+
 }
 
+
+/**
+    * @brief main function of the assembler (loop through ALL files)
+    * @param argc The number of arguments
+    * @param argv arguments array
+*/
 int main(int argc, char *argv[])
 {
     
@@ -108,10 +131,14 @@ int main(int argc, char *argv[])
  
     printf("----------------------\n");
 
+    welcome_message();
+
+    printf("----------------------\n");
+
     if (argc < 2)
     {
-        log_error("No files provided\n\tUsage: %s <file1> <file2> ... <fileN>\n", argv[0]);
-        exit(1);
+        log_error("No files were provided to the assembler.\n\tUsage: %s <file1> <file2> ... <fileN>.\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
     /* create an array containg all the argv's with .as after the name */

@@ -14,9 +14,8 @@
 */      
 #define ASSEMBLER_MAX_CAPACITY (4096 - INITIAL_IC_VALUE)
 
-
+/* Each machine word, whether it's a code or a data word, is always made by a 15 bit integer. */
 typedef struct {
-    int ic;
     unsigned int data: 15;
 } machine_word; 
 
@@ -53,15 +52,15 @@ typedef enum {
     JSR,
     RTS,
     STOP
-} Operation;
+} Operation; /* Note that this matches the order in pages 47 or 32 of the booklet */
 
 typedef enum {
     UNKNOWN_INSTRUCTION = -1,
-    DATA = 0,
-    STRING,
-    ENTRY,
-    EXTERN
-} Instruction;
+    DATA = 0, /* .data */
+    STRING, /* .string */
+    ENTRY, /* .entry */
+    EXTERN /* .extern */
+} Instruction; 
 
 typedef enum {
     UNKNOWN_REGISTER = -1,
@@ -75,15 +74,10 @@ typedef enum {
     R7
 } Register; 
 
-typedef struct {
-    char *name;
-    int is_internal;
-    int is_external;
-} Label;
 
 typedef enum {
     NO_PASS_ERROR,
     FOUND_ERROR
-} PassError;
+} PassError; /* Used mainly to signal if the first / second pass wen't ok or not */
 
 #endif

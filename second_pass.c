@@ -3,18 +3,10 @@
 
 int replace_label(char *operand, Labels *labels, List *extern_usage, machine_word **code_image, int ic_counter, int line_num) {
     LabelEntry *entry = labels_get_any(labels, operand);
-    machine_word *word = NULL; 
 
     if (entry == NULL) {
-        log_error("Label referenced in line %d is not defined\n\tLabel: %s\n", line_num, operand);
+        log_error("Label '%s' referenced in line %d is not defined anywhere in the file.\n", operand, line_num);
         return 0;
-    }
-
-    word = code_image[ic_counter - INITIAL_IC_VALUE];
-
-    if (!word) {
-        log_warning("No word found in code image at index %d in line %d \n", ic_counter, line_num);
-        return 0; /* Maybe this should be an error */
     }
 
     if (entry->type == EXTERN_LABEL) {
@@ -48,7 +40,7 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
     skip_spaces(&validate);
 
     if (*validate != '\0' && *validate != '\n') {
-        log_error(".entry has more then one operands (externous characters / second label) in line %d\n", line_num);
+        log_error(".entry operation has more then one operand.\n\t (externous characters / second label) in line %d.\n", line_num);
         safe_free(value);
         *found_error = 1;
         return;
@@ -57,7 +49,7 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
     /* Check that the label is not already defined as an extern */
 
     if (labels_get(labels, value, EXTERN_LABEL) != NULL) {
-        log_error("Label already defined as extern in line %d\n\tLabel: %s\n", line_num, value);
+        log_error("Label '%s' in line %d was already defined as an .extern in this file.\n", value, line_num);
         *found_error = 1;
         safe_free(value);
         return;
@@ -65,7 +57,7 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
 
 
     if (labels_get(labels, value, ENTRY_LABEL) != NULL) {
-        log_error("Label already defined as entry in line %d\n\tLabel: %s\n", line_num, value);
+        log_error("Label '%s' in line %d was already defined as entry in this file.\n", value, line_num);
         *found_error = 1;
         safe_free(value);
         return;
@@ -73,7 +65,7 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
 
 
     if (labels_get(labels, value, CODE_LABEL) == NULL && labels_get(labels, value, DATA_LABEL) == NULL) {   
-        log_error("Label referenced in .entry is not defined in line: %d\n\tLabel: %s\n", line_num, value);
+        log_error("Label '%s' referenced in .entry on line %d is not defined in this file.\n", value, line_num);
         *found_error = 1;
         safe_free(value);
         return;
@@ -83,6 +75,8 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
 
     entry = labels_get_any(labels, value);
     labels_insert(labels, value, entry->value, ENTRY_LABEL);
+
+    safe_free(value);
 
 
 }
@@ -105,11 +99,9 @@ PassError second_pass(char *file_name, Labels *labels, List *extern_usage, machi
     int found_error = 0;
     char line[MAX_LINE_SIZE + 2];
     char *p_line;
-    char *value, *validate;
 
     int ic_counter = INITIAL_IC_VALUE;
     char *operation_name;
-    LabelEntry *entry;
     int is_dest_reg, is_source_reg;
 
     char **operands;

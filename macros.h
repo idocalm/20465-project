@@ -8,7 +8,7 @@
 #include <ctype.h>
 
 #include "structs/list.h"
-#include "globals.h"
+#include "definitions.h"
 #include "helpers/symbols.h"
 #include "helpers/strings.h"
 

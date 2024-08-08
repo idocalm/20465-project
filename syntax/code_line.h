@@ -7,7 +7,7 @@
 #include "../helpers/strings.h"
 #include "../structs/labels.h"
 #include "../helpers/symbols.h"
-#include "../globals.h"
+#include "../definitions.h"
 
 /* - Prototypes - */
 

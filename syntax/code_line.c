@@ -1,5 +1,43 @@
 #include "code_line.h"
 
+/** 
+    * @brief Adds a word that was already encoded to the machines code image
+    * @param code_image - the code image array 
+    * @param word - the word we're going to add
+    * @param ic - the instruction counter
+    * @param found_error - a flag that indicates if the memory is about to go overflow    
+
+*/
+
+void add_to_code_image(machine_word **code_image, machine_word *word, int *ic, int *found_error) {
+    /* Check we're not writing pass memory */
+    if (*ic - INITIAL_IC_VALUE >= ASSEMBLER_MAX_CAPACITY) { /* We're out of memory */
+        log_error("The system code image is full. No more words can be written.\n\tCurrent instruction counter: %d.\n", *ic);
+        *found_error = 1;
+        return;
+    }
+
+    /* Add the word to the code image with - INITIAL_IC_VALUE so we don't waste cells in the array */
+    code_image[*ic - INITIAL_IC_VALUE] = word;
+    (*ic)++;
+}
+
+void extract_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source, int line_num, int *found_error) {
+    /* 
+        Note that the validation of the operands themselves are done inside address_mode function
+        and if there's an error we'll get -1 and the found_error flag will be set to 1
+    */
+
+    if (operands_count == 1) {
+        *dest = address_mode(operands[0], 1, line_num, found_error);
+    } else if (operands_count == 2) {
+        *source = address_mode(operands[0], 1, line_num, found_error);
+        *dest = address_mode(operands[1], 1, line_num, found_error);
+    } 
+}
+
+
+
 /**
     * @brief Builds a single word when BOTH source and dest are registers (or "pointers")
     * @param source - the source operand
@@ -117,42 +155,6 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
     return word;
 }   
 
-/** 
-    * @brief Adds a word that was already encoded to the machines code image
-    * @param code_image - the code image array 
-    * @param word - the word we're going to add
-    * @param ic - the instruction counter
-    * @param found_error - a flag that indicates if the memory is about to go overflow    
-
-*/
-
-void add_to_code_image(machine_word **code_image, machine_word *word, int *ic, int *found_error) {
-    /* Check we're not writing pass memory */
-    if (*ic - INITIAL_IC_VALUE >= ASSEMBLER_MAX_CAPACITY) { /* We're out of memory */
-        log_error("Code image is full, can't add more words\n");
-        *found_error = 1;
-        return;
-    }
-
-    /* Add the word to the code image with - INITIAL_IC_VALUE so we don't waste cells in the array */
-    code_image[*ic - INITIAL_IC_VALUE] = word;
-    (*ic)++;
-}
-
-void extract_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source, int line_num, int *found_error) {
-    /* 
-        Note that the validation of the operands themselves are done inside address_mode function
-        and if there's an error we'll get -1 and the found_error flag will be set to 1
-    */
-
-    if (operands_count == 1) {
-        *dest = address_mode(operands[0], 1, line_num, found_error);
-    } else if (operands_count == 2) {
-        *source = address_mode(operands[0], 1, line_num, found_error);
-        *dest = address_mode(operands[1], 1, line_num, found_error);
-    } 
-}
-
 /**
     * @brief Handles a line of code and builds the machine code for it
     * @param line - the line of code
@@ -195,13 +197,15 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
                    because we don't know how to analyze the sentence and where the op / operands are
            So we return 1 (an error) immediately
         */
+        safe_free(operands);
+
         return 1;
     }
 
     if (label[0] != '\0') { /* The is_label_error function sets the first char to be \0 if somethings wrong with the label */
         LabelEntry *entry = labels_get_any(labels, label); 
         if (entry != NULL) { /* Check if the label is already defined */
-            log_error("Label already defined in line %d\n\tLabel: %s\n", line_num, label);
+            log_error("Label '%s', in line %d is already defined in the file.\n", label, line_num);
             found_error = 1;
         }
 
@@ -216,8 +220,9 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
     op = get_operation(operation_name);
 
     if (op == UNKNOWN_OPERATION) { /* We're unfamiliar with the op (received -1) */
-        log_error("Invalid operation name in line %d\n\tOperation name: %s at: ...%s\n", line_num, operation_name, line);
+        log_error("Invalid operation name '%s' in line %d.\n", operation_name, line_num);
         safe_free(operation_name);
+        free_operands(operands, operands_count);
         return 1;
     }
 
@@ -229,20 +234,20 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
     get_operands(line, operands, &operands_count);
 
     if (operands == NULL) { /* The function is designed to return NULL if there were more then 2 operands */
-        log_error("Invalid number of operands in line %d\n\tExpected: 0-2, got: more then 2\n", line_num);
+        log_error("Invalid number of operands in line %d\n\tExpected: 0-2, received: more then 2.\n", line_num);
         found_error = 1;
     }
 
     /* Validate that the number of operands matches the operation */
     if (operands_count != (int) op_group) {
-        log_error("Invalid number of operands in line %d\n\tExpected: %d, got: %d\n", line_num, op_group, operands_count);
+        log_error("Invalid number of operands in line %d\n\tExpected: %d, received: %d.\n", line_num, op_group, operands_count);
         found_error = 1;
     }
 
     /* Validate operands are not made by more then 1 word. For example: "r1 r2" is invalid. */
     for (i = 0; i < operands_count; i++) {
         if (strchr(operands[i], ' ') != NULL) {
-            log_error("Invalid operand in line %d\n\tOperand: %s at: ...%s \t(missing ',')\n", line_num, operands[i], line);
+            log_error("Invalid operand '%s' in line %d\n\t(missing ',')\n",operands[i], line_num);
             found_error = 1;
         }
     }
@@ -250,7 +255,7 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
     extract_address_modes(operands, operands_count, &dest, &source, line_num, &found_error); /* Extract the address modes to dest/source */
     /* Now validate the adress modes are ok with the operation */
     if (!valid_command_with_operands(op, dest, source)) {
-        log_error("Invalid operands in line %d.\n\t The Operation: %d does not support addressing modes of source/dest operands\n\tDest: %d, Source: %d\n", line_num, op, dest, source);
+        log_error("Invalid operands in line %d.\n\t The Operation: %d does not support one or more operands addressing modes.\n\tsest: %d\tsource: %d.\n", line_num, op, dest, source);
         found_error = 1;
     }
 

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "../globals.h"
+#include "../definitions.h"
 #include "../structs/list.h"
 #include "../structs/labels.h"
 #include "./strings.h"
@@ -44,5 +44,7 @@ int valid_command_with_operands(Operation op, AddressMode dest, AddressMode sour
 
 OperationGroup get_operation_group(Operation op);
 AddressMode address_mode(char *operand, int report_errors, int line_num, int *found_error);
+char *get_op_name(char *line);
+char *get_instruction_name(char *line);
 
 #endif
