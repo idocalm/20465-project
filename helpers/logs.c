@@ -1,5 +1,7 @@
 #include "logs.h"
 
+
+
 /**
     * @brief Changes the text color to red [for errors] 
 */

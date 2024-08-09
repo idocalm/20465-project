@@ -1,6 +1,49 @@
 #include "output.h"
 
 /**
+ * @brief Checks if an entry exists in the labels table 
+ * @param labels The labels struct
+ * @return 1 if an entry exists, 0 otherwise
+*/
+
+int does_entry_exist(Labels *labels) {
+    LabelEntry *current = labels->head;
+
+    while (current != NULL)
+    {
+        if (current->type == ENTRY_LABEL)
+        {
+            return 1;
+        }
+        current = current->next;
+    }
+
+    return 0;
+}
+
+/**
+    * @brief Checks if there is any usage of an extern label
+    * @param extern_usage the extern usage list maintained through the second pass 
+    * @return 1 if an extern exists, 0 otherwise
+*/
+
+int does_extern_exist(List *extern_usage) {
+    Node *current = extern_usage->head;
+
+    while (current != NULL)
+    {
+        if (current->data != NULL)
+        {
+            return 1;
+        }
+        current = current->next;
+    }
+
+    return 0;
+}
+
+
+/**
  * @brief Builds the ob file
  * @param ob_file a FILE* to write into 
  * @param code_image The code image
@@ -8,6 +51,7 @@
  * @param ic The instruction counter
  * @param dc The data counter
 */
+
 void build_ob(FILE *ob_file, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
     int i = 0;
 
@@ -79,12 +123,10 @@ void build_externals(FILE *ext_file, List *extern_usage) {
 
 void create_output_files(char *file_name, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
 
-    int contains_entry = 0; /* Do we need to create an .entry file? */
-    int contains_extern = 0; /* Do we need to create an .extern file? */
     int i = 0;
-    LabelEntry *current = labels->head; /* The current label entry (we would soon iterate over this). */
     FILE *ob_file, *ent_file, *ext_file; /* The output files */
 
+    int create_ent = 0, create_ext = 0; /* Flags to indicate if the files need to be created */
     char *ent_file_name = safe_malloc(strlen(file_name) + 1);
     char *ext_file_name = safe_malloc(strlen(file_name) + 1);
     char *ob_file_name = safe_malloc(strlen(file_name) + 2);
@@ -98,64 +140,40 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
     }
 
     /* Add the file extensions (according to the file type) */
-    ent_file_name[i] = '.';
-    ext_file_name[i] = '.';
-    ob_file_name[i] = '.';
+    strcat(ent_file_name, ".ent");
+    strcat(ext_file_name, ".ext");
+    strcat(ob_file_name, ".ob");
 
-    ent_file_name[i + 1] = 'e';
-    ent_file_name[i + 2] = 'n';
-    ent_file_name[i + 3] = 't';
-    ent_file_name[i + 4] = '\0';
-
-
-    ext_file_name[i + 1] = 'e';
-    ext_file_name[i + 2] = 'x';
-    ext_file_name[i + 3] = 't';
-    ext_file_name[i + 4] = '\0';    
-
-    ob_file_name[i + 1] = 'o';
-    ob_file_name[i + 2] = 'b';
-    ob_file_name[i + 3] = '\0';
 
     /* Open the files */
 
     ob_file = open_file(ob_file_name, "w");
-    ent_file = open_file(ent_file_name, "w");
-    ext_file = open_file(ext_file_name, "w");
 
+    build_ob(ob_file, code_image, data_image, ic, dc); /* Build the .ob file */
 
-    /* Check what files need to be created */
-
-    while (current != NULL)
-    {
-        if (current->type == ENTRY_LABEL)
-        {
-            contains_entry = 1;
-        }
-        else if (current->type == EXTERN_LABEL)
-        {
-            contains_extern = 1;
-        }
-        current = current->next;
-    }
-
-    build_ob(ob_file, code_image, data_image, ic, dc);
-
-    if (contains_entry)
-    {
+    /* Check what files need to be created and create the neccessary files */
+    if (does_entry_exist(labels)) {
+        create_ent = 1; 
+        ent_file = open_file(ent_file_name, "w");
         build_entries(ent_file, labels);
     }
-
-    if (contains_extern)
-    {
+   
+    if (does_extern_exist(extern_usage)) {
+        create_ext = 1;
+        ext_file = open_file(ext_file_name, "w");
         build_externals(ext_file, extern_usage);
     }
 
     /* Close the files & free the memory */
+    if (create_ent) {
+        fclose(ent_file);    
+    }
+
+    if (create_ext) {
+        fclose(ext_file);
+    }
 
     fclose(ob_file);
-    fclose(ent_file);
-    fclose(ext_file);
 
     safe_free(ent_file_name);
     safe_free(ext_file_name);

@@ -4,7 +4,7 @@
 #include "definitions.h"
 #include "./structs/list.h"
 #include "./structs/labels.h"
-#include "./helpers/string.h"
+#include "./helpers/strings.h"
 
 /* - Prototypes - */
 

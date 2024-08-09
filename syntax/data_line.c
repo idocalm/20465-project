@@ -111,14 +111,14 @@ int insert_extern_arguments(char *line, Labels *labels, int line_num) {
     entry_label[strlen(entry_label)] = '\0';
 
     if (!is_label(entry_label)) { /* Check that the extern argument is a valid label */
-        log_error("Invalid .extern in line %d.\n\tThe argument can't be a valid label.\n", line_num);
+        log_error("Invalid .extern in line %d.\n\tThe argument '%s' can't be a valid label.\n", line_num, entry_label);
         safe_free(entry_label);
         return 0;
     }
 
     if (labels_get(labels, entry_label, EXTERN_LABEL) != NULL) {
         /* Note: the instruction on duplicate definitions as extern are not clear. We've choosen to log a warning and not an error */
-        log_warning("Invalid .extern in line %d.\n\t.The argument '%s' was already defined as an extern in the file\n\tYou should remove one of the definitions.", line_num, entry_label);
+        log_warning("Invalid .extern in line %d.\n\t.The argument '%s' was already defined as an extern in the file\n\tYou should remove one of the definitions.\n", line_num, entry_label);
         safe_free(entry_label);
         return 1;
     }
@@ -164,8 +164,9 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
                    because we don't know how to analyze the sentence and where the op / operands are
            So we return 1 (an error) immediately
         */
+        printf("Error at line %d\n", line_num);
         safe_free(label);
-        return 0; 
+        return 1; 
     }
 
 
@@ -173,6 +174,7 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
         /* Move the line pointer past the label */
         line += strlen(label) + 1;
     }
+
 
     /* Skip any spaces before the acutal instruction */
     skip_spaces(&line);

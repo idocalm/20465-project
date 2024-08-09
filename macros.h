@@ -18,20 +18,14 @@
 #define MACRO_END_PREFIX_LEN strlen(MACRO_END_PREFIX)
 #define COMMENT_PREFIX ';'
 
-typedef enum 
-{
+typedef enum {
     NO_MACRO_ERROR,
     MACRO_ERROR
-} MacroErrors;
+} MacroError;
 
-
-int is_comment(char *p_line);
-int handle_ignore_macros(char *p_line, int insideMacro);
-void extract_file_content(char *p_fileName, char **pp_content);
-MacroErrors handle_macros(char *p_fileName, List *p_macros);
-MacroErrors extract_macros(FILE *p_file, List *p_macros);
-
-void replace_macros(FILE *p_file, char *p_fileName, List *p_macros);
-
+MacroError handle_macros(char *p_fileName, List *p_macros);
+void *search_macros(char *line, List *macros);
+MacroError replace_macros(FILE *p_file, char *p_fileName, List *p_macros);
+MacroError extract_macros(FILE *input_file, List *macros);
 
 #endif

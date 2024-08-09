@@ -17,6 +17,7 @@
 
 void welcome_message() {
 
+
     printf("  #####                  #      #####    #####   #######  #     #  ######   #        #######  ######  \n");
     printf(" #     #                # #    #     #  #     #  #        ##   ##  #     #  #        #        #     # \n");
     printf(" #                     #   #   #        #        #        # # # #  #     #  #        #        #     # \n");
@@ -25,8 +26,8 @@ void welcome_message() {
     printf(" #     #              #     #  #     #  #     #  #        #     #  #     #  #        #        #    #  \n");
     printf("  #####               #     #   #####    #####   #######  #     #  ######   #######  #######  #     # \n");
 
-    printf(" ----- Made by: Ido Calman & Roei Faiman -----\n");
-    printf(" ----- Semester: 2024B -----\n");
+    printf(BOLD" ----- Made by: Ido Calman & Roei Faiman -----\n"RESET);
+    printf(BOLD" ----- Semester: 2024B -----\n"RESET);
     
 }
 
@@ -57,11 +58,17 @@ void handle_file(char *file_name) {
     {
         /* We can't continue after an error in the macro stage because there's no .am file */
         log_error("One or more errors were found in file '%s' during pre-processor. Moving to the next file.\n", file_name);
+        list_free(macros);
+        list_free(extern_usage);
+        labels_free(labels);
+        safe_free(new_file_name);
+
         return; 
     }
 
     /* We no longer need the macros so we can free it */
     log_success("Pre-processor finished successfully for file '%s'\n", file_name);
+
     list_free(macros);
 
 
@@ -101,6 +108,7 @@ void handle_file(char *file_name) {
         return; 
     }
 
+    debug_labels(labels);
 
     log_info("Creating output files for %s\n", new_file_name);
 
@@ -156,6 +164,7 @@ int main(int argc, char *argv[])
     {
         handle_file(files[i]);
     }
+
 
     /* free the memory */
     for (i = 1; i < argc; i++)

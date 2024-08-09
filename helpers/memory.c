@@ -45,6 +45,7 @@ void *safe_realloc(void *ptr, size_t size)
 }
 
 
+
 /**
     * @brief Frees the memory allocated.
     * @param ptr - the pointer to the memory to be freed
@@ -78,7 +79,7 @@ FILE *open_file(const char *filename, char *mode)
     FILE *file = fopen(filename, mode);
     if (file == NULL)
     {
-        log_error("[SYSTEM PROBLEM] System couldn't open file '%s'. (Permissions?). Assembler is shutting down. [SYSTEM PROBLEM]\n");
+        log_error("System couldn't open file '%s'. Assembler is shutting down.\n", filename);
         exit(EXIT_FAILURE);
     }
     return file;

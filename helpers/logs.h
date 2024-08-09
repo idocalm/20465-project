@@ -1,6 +1,9 @@
 #ifndef LOGS_H
 #define LOGS_H
 
+#define BOLD "\033[1m"
+#define RESET "\033[0m"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include "../definitions.h"
@@ -18,6 +21,5 @@ void log_warning(char *format, ...);
 void log_success(char *format, ...);
 void log_info(char *format, ...);
 void log_debug(char *format, ...);
-void debug_word(machine_word *word);
 
 #endif
