@@ -25,39 +25,11 @@ void add_data_to_image(machine_word **data_image, int *dc, int data) {
 int insert_data_arguments(char *line, int *dc, machine_word **data_image, int line_num) {
     char *operand = NULL; /* Will store the current argument in the .data line */
     char *ptr = line; /* A pointer for validating without destroying the *line */
-    char *last_char = line + strlen(line) - 1; /* A pointer to the last character in the line (for validation) */
     int value;  /* Will store the integer value of the current argument */
 
-    /* Check if after skipping the spaces there's an illegal ',' */
-    if (line[0] == ',') {
-        log_error("Invalid .data in line %d.\n\tData arguments starts with a comma.\n", line_num);
-        return 0;
+    if (!validate_operand_list(line, line_num, 1)) { /* Validate the line */
+        return 0; /* Found an error */
     }
-
-    /* Skip spaces from the end going backwards */
-    while (isspace(*last_char)) {
-        last_char--;
-    }
-
-    /* Check if after skipping the data ends with an ',' */
-    if (*last_char == ',') {
-        log_error("Invalid .data in line %d.\n\tData arguments ends with a comma.\n", line_num);
-        return 0;
-    }
-
-    /* Check for no double commas through the argument */
-    while ((operand = strchr(ptr, ',')) != NULL) {
-        operand++; 
-        skip_spaces(&operand); /* Skip spaces after the comma because ,     , is also invalid */
-        if (*operand == ',') {
-            log_error("Invalid .data in line %d.\n\tData arguments are separated by a double comma.\n", line_num);
-            return 0; /* Found an error */
-        }
-        ptr = operand + 1; /* Move pas the , */
-    }   
-
-    /* Go back to the start, now build the actual data */
-    ptr = line;
 
     while ((operand = strtok(ptr, ",")) != NULL) {
     

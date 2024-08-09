@@ -24,8 +24,9 @@ void copy_string_until_space(char *dest, const char *src);
 int non_character(char c);
 int is_comment(char *line);
 int is_integer(char *p);
+int validate_operand_list(char *line, int line_num, int report_error);
 
-void get_operands(char *line, char **operands, int *operands_count);
+int get_operands(char *line, char **operands, int *operands_count, int line_num);
 char *convert_to_octal(int data);
 
 #endif

@@ -247,6 +247,7 @@ MacroError extract_macros(FILE *input_file, List *macros) {
     int found_error = 0;
     char *macro_name = NULL;
     char *macro_content = NULL;
+    char *p_search;
     int inside_macro = 0;
 
     size_t macroContentSize = 0;
@@ -262,7 +263,7 @@ MacroError extract_macros(FILE *input_file, List *macros) {
             continue;
         }
 
-        char *p_search = p_line;
+        p_search = p_line;
         skip_spaces(&p_search);
 
         if (!inside_macro && strncmp(p_search, MACRO_START_PREFIX, MACRO_START_PREFIX_LEN) == 0) { /* Search for a possible macro definition */

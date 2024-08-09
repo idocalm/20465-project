@@ -145,22 +145,76 @@ int is_integer(char *p)
 }
 
 /**
-    * @brief Splits a given string into operands
+    * @brief Validates a given operand list (checks for double commas, commas at the beginning / end of the list)
+    * @param line - the string
+    * @param line_num - the line number (for error reporting)
+    * @return 1 if the operand list is valid, 0 otherwise
+
+    This is useful basically for each code line or for .data lines
+*/
+int validate_operand_list(char *line, int line_num, int report_error) {
+    char *operand = NULL;
+    char *last = NULL;
+
+    skip_spaces(&line);
+    last = line + strlen(line) - 1;
+
+    /* Check if after skipping the spaces there's an illegal ',' */
+    if (line[0] == ',') {
+        if (report_error) 
+            log_error("Invalid comma in line %d.\n\tThe argument list starts with a comma.\n", line_num);
+        return 0;
+    }
+
+    /* Skip spaces from the end going backwards */
+    while (isspace(*last)) {
+        last--;
+    }
+
+    /* Check if after skipping all the arguments, the line ends with an ',' */
+
+    if (*last == ',') {
+        if (report_error)
+            log_error("Invalid comma in line %d.\n\tThe argument list ends with a comma.\n", line_num);
+        return 0;
+    }
+
+    /* Check for no double commas */
+    while ((operand = strchr(line, ',')) != NULL) {
+        operand++; 
+        skip_spaces(&operand); /* Skip spaces after the comma because ,     , is also invalid */
+        if (*operand == ',') {
+            if (report_error)
+                log_error("Invalid comma in line %d.\n\tThe argument list contains a double comma.\n", line_num);
+            return 0; /* Found an error */
+        }
+        line = operand + 1; /* Move pas the , */
+    }
+
+    return 1;
+}
+
+/**
+    * @brief Splits a given string into operands and reports for double / invalid commas
     * @param line - the string
     * @param operands - the array of operands
     * @param operands_count - the number of operands
+    * @param line_num - the line number (for error reporting)
 */
 
-void get_operands(char *line, char **operands, int *operands_count) {
+int get_operands(char *line, char **operands, int *operands_count, int line_num) {
     int i = 0;
     char *operand = NULL;
+
+    if (!validate_operand_list(line, line_num, 1)) {
+        return 0;
+    }
 
     /* split line by ',' */
     while ((operand = strtok(line, ",")) != NULL) {
 
-
         if (i == MAX_OPERANDS + 1) {
-            return;
+            return 0;
         }
 
         operands[i] = (char *) safe_malloc(strlen(operand) + 1);
@@ -173,6 +227,8 @@ void get_operands(char *line, char **operands, int *operands_count) {
         line = NULL; 
     }
     *operands_count = i;
+
+    return 1; 
 }
 
 /**

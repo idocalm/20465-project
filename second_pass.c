@@ -1,15 +1,4 @@
 #include "second_pass.h"
-
-void debug_word(int ic_counter, machine_word *word) {
-    /* Debug the ->data which is a 15 bit, print all the bits with leading 0 */
-    int i = 0;
-    printf("Word %d: ", ic_counter);
-    for (i = 14; i >= 0; i--) {
-        printf("%d", (word->data >> i) & 1);
-    }
-    printf("\n");
-}
-
 /**
     * @brief Tries to re-encode a word in the machine, after we know the label that's missing.
     * @param operand The operand (a label)
@@ -224,7 +213,14 @@ PassError second_pass(char *file_name, Labels *labels, List *extern_usage, machi
         operands = (char **) safe_malloc(sizeof(char *) * MAX_OPERANDS);
         operands_count = 0;
 
-        get_operands(p_line, operands, &operands_count);
+        /* We don't want to repeat the same error code so if theres a problem faced in first pass we just skip the line*/
+
+        if (!validate_operand_list(p_line, line_num, 0)) {
+            found_error = 1;
+            continue;
+        }
+
+        get_operands(p_line, operands, &operands_count, line_num);
 
         find_address_modes(operands, operands_count, &dest, &source);
 

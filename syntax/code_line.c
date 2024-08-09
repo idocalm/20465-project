@@ -231,7 +231,7 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
 
     skip_spaces(&line); /* Skip any spaces before the operands */
     
-    get_operands(line, operands, &operands_count);
+    get_operands(line, operands, &operands_count, line_num); /* Extract the operands */
 
     if (operands == NULL) { /* The function is designed to return NULL if there were more then 2 operands */
         log_error("Invalid number of operands in line %d\n\tExpected: 0-2, received: more then 2.\n", line_num);
@@ -255,7 +255,7 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
     extract_address_modes(operands, operands_count, &dest, &source, line_num, &found_error); /* Extract the address modes to dest/source */
     /* Now validate the adress modes are ok with the operation */
     if (!valid_command_with_operands(op, dest, source)) {
-        log_error("Invalid operands in line %d.\n\t The Operation: %d does not support one or more operands addressing modes.\n\tsest: %d\tsource: %d.\n", line_num, op, dest, source);
+        log_error("Invalid operands in line %d.\n\tThe Operation: %d does not support one or more operands addressing modes.\n\tDest: %d\tsource: %d.\n", line_num, op, dest, source);
         found_error = 1;
     }
 
