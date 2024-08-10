@@ -10,8 +10,6 @@
 #include "./memory.h"
 
 #define COMMENT_PREFIX ';'
-#define MIN_12_BIT_NUMBER -2048
-#define MAX_12_BIT_NUMBER 2047
 #define OCTAL_SIZE 5
 
 void skip_non_spaces(char **p);

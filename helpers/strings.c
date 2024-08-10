@@ -135,11 +135,6 @@ int is_integer(char *p)
 
     num = atoi(p);
 
-    if (num < MIN_12_BIT_NUMBER || num > MAX_12_BIT_NUMBER) 
-    {
-        return NON_VALID_INTEGER;
-    }
-    
 
     return num * sign;
 }

@@ -11,6 +11,7 @@
 
 /* - Prototypes - */
 
+void validate_immediate(AddressMode mode, char *operand, int line_num, int *found_error); 
 machine_word *build_single_word(char *source, char *dest, int *ic);
 machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand, int *ic);
 machine_word *build_first_word(Operation op, AddressMode source, AddressMode dest, int *ic);

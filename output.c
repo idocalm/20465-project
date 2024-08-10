@@ -5,7 +5,6 @@
  * @param labels The labels struct
  * @return 1 if an entry exists, 0 otherwise
 */
-
 int does_entry_exist(Labels *labels) {
     LabelEntry *current = labels->head;
 
@@ -127,9 +126,14 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
     FILE *ob_file, *ent_file, *ext_file; /* The output files */
 
     int create_ent = 0, create_ext = 0; /* Flags to indicate if the files need to be created */
-    char *ent_file_name = safe_malloc(strlen(file_name) + 1);
-    char *ext_file_name = safe_malloc(strlen(file_name) + 1);
-    char *ob_file_name = safe_malloc(strlen(file_name) + 2);
+    char *ent_file_name = safe_malloc(strlen(file_name) + 2);
+    char *ext_file_name = safe_malloc(strlen(file_name) + 2);
+    char *ob_file_name = safe_malloc(strlen(file_name) + 1);
+
+
+    ent_file_name[strlen(file_name) + 1] = '\0';
+    ext_file_name[strlen(file_name) + 1] = '\0';
+    ob_file_name[strlen(file_name)] = '\0';
 
     /* Copy the file name until the . */
     for (; i < strlen(file_name) && file_name[i] != '.'; i++)
@@ -138,11 +142,16 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
         ext_file_name[i] = file_name[i];
         ob_file_name[i] = file_name[i];
     }
+    ent_file_name[i] = '\0';
+    ext_file_name[i] = '\0';
+    ob_file_name[i] = '\0';
 
     /* Add the file extensions (according to the file type) */
     strcat(ent_file_name, ".ent");
     strcat(ext_file_name, ".ext");
     strcat(ob_file_name, ".ob");
+
+
 
 
     /* Open the files */

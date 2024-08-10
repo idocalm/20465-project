@@ -13,6 +13,7 @@ void add_to_code_image(machine_word **code_image, machine_word *word, int *ic, i
     /* Check we're not writing pass memory */
     if (*ic - INITIAL_IC_VALUE >= ASSEMBLER_MAX_CAPACITY) { /* We're out of memory */
         log_error("The system code image is full. No more words can be written.\n\tCurrent instruction counter: %d.\n", *ic);
+        safe_free(word);
         *found_error = 1;
         return;
     }
@@ -87,7 +88,7 @@ machine_word *build_additional_word(AddressMode mode, int is_dest, char *operand
 
     if (mode == IMMEDIATE) {
         int value = is_integer(operand + 1); /* Skip the # */
-
+        
         word->data |= (1 << 2); /* Turning 'A' on (page 43 in the booklet) */
         word->data |= (value << 3); /* The value goes in bits 3-14 - a 12 bit number. */
 
@@ -154,6 +155,25 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
 
     return word;
 }   
+
+/**
+    * @brief Validates that the number of an immediate value is not over 12 bits
+    * @param mode - the address mode of the operand
+    * @param operand - the operand
+    * @param line_num - the line number
+    * @param found_error - a flag to turn on if there's an error
+*/
+
+void validate_immediate(AddressMode mode, char *operand, int line_num, int *found_error) {
+    if (mode == IMMEDIATE) {
+        int value = is_integer(operand + 1); /* Skip the # */
+        if (value > MAX_12_BIT_NUMBER || value < MIN_12_BIT_NUMBER) {
+            log_error("Invalid immediate value in line %d\n\tValue: %d is out of range.\n", line_num, value);
+            *found_error = 1;
+        }
+    }
+}
+
 
 /**
     * @brief Handles a line of code and builds the machine code for it
@@ -266,6 +286,23 @@ int handle_code_line(char *line, int line_num, int *ic, Labels *labels, machine_
 
     is_source_reg = source == REGISTER || source == POINTER;
     is_dest_reg = dest == REGISTER || dest == POINTER;
+
+    if (operands_count == 1) {
+        validate_immediate(dest, operands[0], line_num, &found_error); /* Validate the immediate value if exists */
+    }
+    else if (operands_count == 2) {
+        printf("Operand 1: %s\n", operands[0]);
+        validate_immediate(dest, operands[1], line_num, &found_error); /* Validate the immediate value if exists */
+        validate_immediate(source, operands[0], line_num, &found_error); /* Validate the immediate value if exists */
+    }
+
+
+
+    if (found_error) { /* If we found an error we don't want to continue */
+        safe_free(operation_name);
+        free_operands(operands, operands_count);
+        return 1;
+    }
 
     /* -- Word building -- */
 

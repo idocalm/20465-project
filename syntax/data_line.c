@@ -136,7 +136,6 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
                    because we don't know how to analyze the sentence and where the op / operands are
            So we return 1 (an error) immediately
         */
-        printf("Error at line %d\n", line_num);
         safe_free(label);
         return 1; 
     }
@@ -181,8 +180,10 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
     /* Handle the line according to the instruction type */
     if (instruction == STRING) {
 
+        
         /* Validate that the string starts with a " */
         if (*line != '"') {
+            printf("1\n");
             log_error("Invalid .string command.\n\tInvalid argument in line %d.\n\tExpected: \"<string>\", got: %s\n", line_num, line);
             return 1;
         }
@@ -190,7 +191,7 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
         line++;
         ptr = line + 1; /* Skip the " */
 
-        while (!isspace(*ptr) && *ptr != '"') {
+        while (*ptr != '\n' && *ptr && *ptr != EOF && *ptr != '"') {
             ptr++;
         } 
 
@@ -206,6 +207,7 @@ int handle_data_line(char *line, int line_num, int *ic, int *dc, Labels *labels,
 
         /* Validate that there are no extra characters after the string */
         if (*ptr != '\0' && *ptr != '\n') {
+            printf("3\n");
             log_error("Invalid .string command.\n\tInvalid arguments in line %d.\n\tReceived extra characters after closure.\n", line_num);
             return 1;
         }

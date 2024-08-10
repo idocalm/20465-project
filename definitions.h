@@ -7,6 +7,8 @@
 #define MAX_OPERANDS 2
 #define MAX_LABEL_SIZE 31
 #define NON_VALID_INTEGER 2048 /* The maximum number represented in 12 bits */
+#define MIN_12_BIT_NUMBER -2048
+#define MAX_12_BIT_NUMBER 2047
 
 
 /* A note: As page 58 says in the booklet we are allowed to limit the assembler to a certain size.
