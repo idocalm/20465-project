@@ -20,7 +20,7 @@
 /* - Prototypes - */
 
 
-int replace_label(char *operand, Labels *labels, List *extern_usage, machine_word **code_image, int ic_counter, int line_num);
+int replace_label(char *operand, Labels *labels, List *extern_usage, machine_word **code_image, int ic_counter, int line_num, int replace);
 void handle_entry_line(char *line, Labels *labels, int line_num, int *found_error);
 void find_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source);
 

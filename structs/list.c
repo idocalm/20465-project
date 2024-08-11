@@ -1,19 +1,17 @@
 #include "list.h"
 
 /*
-    - The list structure is a typical linked list. Nothing fancy here, 
+    - The list struct is a typical linked list. Nothing fancy here, 
     except we have a type field which can be either STRING_TYPE or INTEGER_TYPE.
     So we can store either a string or an integer as data.
 
-    That comes in handy because we can use the same structure for storing macros (which is a string)
-    and for storing the extern usage (which is an integer).
-
+    That comes in handy because we can use the same struct for storing macros (which is a string)
+    and for storing the extern usage (which is an integer, the usage address).
 */
 
-
 /**
-    * Create a new blank list structure
-    * @return A pointer to the new list structure
+    * Create a new blank list 
+    * @return A pointer to the new list
 */
 
 List* list_create() {
@@ -23,7 +21,7 @@ List* list_create() {
 }
 
 /**
-    * Insert a string
+    * Insert a string at the begining of the list
     * @param list - pointer to a list
     * @param key - The key of the new node
     * @param data - The data of the new node
@@ -139,16 +137,20 @@ void list_free(List* list) {
     safe_free(list);
 }
 
-/* TODO: Delete this part */
-void list_print(List* list) {
-    Node* current = list->head;
-    printf("Printing list\n");
+/**
+    * @brief Checks if there is any usage of an extern label
+    * @param extern_usage the extern usage list maintained through the second pass 
+    * @return 1 if an extern exists, 0 otherwise
+*/
 
-    while (current != NULL) {
-        printf("%s\n", current->key);
-        printf("%d\n", *(int*) current->data);
-        current = current->next;
+int is_list_empty(List *list) {
+    Node *current = list->head;
+
+    if (current == NULL || current->data == NULL) {
+        return 1;
     }
 
-    printf("End of list\n");
+    return 0;
 }
+
+

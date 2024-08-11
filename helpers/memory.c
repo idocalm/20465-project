@@ -26,10 +26,9 @@ void *safe_malloc(size_t size)
 
 /**
     * @brief Reallocates memory of a given size
-    * @param ptr - the pointer to the memory to be reallocated
-    * @param size - the size of the memory to be allocated
+    * @param ptr - the pointer to the memory that needs changing
+    * @param size - the size of the new memory
     * @return a pointer to the reallocated memory
-
 */
 
 void *safe_realloc(void *ptr, size_t size)
@@ -44,11 +43,9 @@ void *safe_realloc(void *ptr, size_t size)
     return temp;
 }
 
-
-
 /**
-    * @brief Frees the memory allocated.
-    * @param ptr - the pointer to the memory to be freed
+    * @brief Frees a memory that was allocated.
+    * @param ptr - the pointer to the memory
 
 */
 
@@ -69,8 +66,8 @@ void safe_free(void *ptr)
 /**
     * @brief Opens a file. 
     * @param filename - the name of the file. 
-    * @param mode - the mode in which the file should be read.
-    * @return a pointer to the opened file
+    * @param mode - the reading mode 
+    * @return a pointer to the file
 
 */
 
@@ -87,7 +84,7 @@ FILE *open_file(const char *filename, char *mode)
 
 /**
     * @brief Closes a file. 
-    * @param file - the file to be closed.
+    * @param file - the file.
 
 */
 void close_file(FILE *file)

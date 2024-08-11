@@ -41,10 +41,8 @@ int is_label_error(char *line, int line_num, char *dest, int report_error);
 int is_label(char *label);
 int valid_command_with_operands(Operation op, AddressMode dest, AddressMode source);
 
-
 OperationGroup get_operation_group(Operation op);
 AddressMode address_mode(char *operand, int report_errors, int line_num, int *found_error);
-char *get_op_name(char *line);
-char *get_instruction_name(char *line);
+LineType get_line_type(char *line);
 
 #endif

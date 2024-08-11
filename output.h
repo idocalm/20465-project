@@ -5,6 +5,7 @@
 #include "./structs/list.h"
 #include "./structs/labels.h"
 #include "./helpers/strings.h"
+#define OCTAL_SIZE 5
 
 /* - Prototypes - */
 

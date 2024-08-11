@@ -31,6 +31,7 @@ void labels_insert(Labels* labels, char *key, int value, LabelType type);
 LabelEntry* labels_get(Labels* labels, char *key, LabelType type);
 LabelEntry* labels_get_any(Labels* labels, char *key);
 void labels_free(Labels* labels);
-void debug_labels(Labels* labels);
+void update_labels(Labels *labels, int ic);
+int does_entry_exist(Labels *labels);
 
 #endif

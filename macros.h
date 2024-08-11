@@ -25,7 +25,7 @@ typedef enum {
 
 MacroError handle_macros(char *p_fileName, List *p_macros);
 void *search_macros(char *line, List *macros);
-MacroError replace_macros(FILE *p_file, char *p_fileName, List *p_macros);
+MacroError replace_macros(FILE *p_file, char *p_fileName, List *p_macros, MacroError found_error);
 MacroError extract_macros(FILE *input_file, List *macros);
 
 #endif

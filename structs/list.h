@@ -28,6 +28,6 @@ void list_insert_integer(List* list, char *key, int data);
 void list_delete(List* list, char *key);
 Node* list_get(List* list, char *key);
 void list_free(List* list);
-void list_print(List* list);
+int is_list_empty(List *list);
 
 #endif

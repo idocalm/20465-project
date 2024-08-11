@@ -13,8 +13,8 @@
 
 
 /**
-    * Create a new blank labels structure
-    * @return A pointer to the new labels structure
+    * Create a new blank labels list
+    * @return A pointer to the new labels list
 */
 
 Labels* labels_create() {
@@ -24,8 +24,8 @@ Labels* labels_create() {
 }
 
 /**
-    * Insert a new label into the labels structure
-    * @param labels - pointer to the structure
+    * Insert a new label into the labels list
+    * @param labels - pointer to the struct 
     * @param key - The label's "name"
     * @param value - The label's address (an integer)
     * @param type - The label's type
@@ -46,8 +46,8 @@ void labels_insert(Labels* labels, char *key, int value, LabelType type) {
 }
 
 /**
-    * Find a label by it's key and type in the labels structure
-    * @param labels - a pointer to the structure
+    * Find a label by it's key and type in the labels list
+    * @param labels - a pointer to the list 
     * @param key - The label name
     * @param type - The label type
     * @return A pointer to the label entry if found or NULL. 
@@ -72,7 +72,8 @@ LabelEntry* labels_get(Labels* labels, char *key, LabelType type) {
     * Search for a label without relation to the type
     * @param labels - a pointer to the structure
     * @param key - The label name 
- */
+    * @return A pointer to the label entry if found or NULL.
+*/
 
 LabelEntry* labels_get_any(Labels* labels, char *key) {
     LabelEntry* current = labels->head;
@@ -111,61 +112,46 @@ void labels_free(Labels* labels) {
     safe_free(labels);
 }
 
+/**
+    * @brief This function adds the ic value to any DATA_LABEL labels 
+    * @param labels The labels struct
 
-/* TODO: Delete this */
+    * Note: this is done to create different "zones" in the system memory, one for the code and one for the data! 
+    * Information stated at page 53 of the booklet
 
-void debug_labels(Labels* labels) {
-    LabelEntry* current = labels->head;
+*/
+void update_labels(Labels *labels, int ic)
+{
+    LabelEntry *current = labels->head;
 
-    printf("--- DEBUG LABELS ---\n");
-
-
-    printf("\033[0;31m");
-    printf("--- TYPE: CODE_LABEL ---\n");
-    printf("\033[0m");
-
-    while (current != NULL) {
-        if (current->type == CODE_LABEL) {
-            printf("Key: %s\t\tValue: %d\n", current->key, current->value);
+    while (current != NULL)
+    {
+        /* Check that the label is indeed a DATA_LABEL before updating the value */
+        if (current->type == DATA_LABEL)
+        {
+            current->value += ic;
         }
         current = current->next;
     }
-
-    printf("\033[0;32m");
-    printf("--- TYPE: DATA_LABEL ---\n");
-    printf("\033[0m");
-    
-    current = labels->head;
-    while (current != NULL) {
-        if (current->type == DATA_LABEL) {
-            printf("Key: %s\t\tValue: %d\n", current->key, current->value);
-        }
-        current = current->next;
-    }
-
-    printf("\033[0;33m");
-    printf("--- TYPE: EXTERN_LABEL ---\n");
-    printf("\033[0m");
-
-    current = labels->head;
-    while (current != NULL) {
-        if (current->type == EXTERN_LABEL) {
-            printf("Key: %s\t\tValue: %d\n", current->key, current->value);
-        }
-        current = current->next;
-    }
-
-    printf("\033[0;34m");
-    printf("--- TYPE: ENTRY_LABEL ---\n");
-    printf("\033[0m");
-
-    current = labels->head;
-    while (current != NULL) {
-        if (current->type == ENTRY_LABEL) {
-            printf("Key: %s\t\tValue: %d\n", current->key, current->value);
-        }
-        current = current->next;
-    }
-
-    printf("--- END DEBUG LABELS ---\n");
 }
+
+/**
+ * @brief Checks if an entry exists in the labels table 
+ * @param labels The labels struct
+ * @return 1 if an entry exists, 0 otherwise
+*/
+int does_entry_exist(Labels *labels) {
+    LabelEntry *current = labels->head;
+
+    while (current != NULL)
+    {
+        if (current->type == ENTRY_LABEL)
+        {
+            return 1;
+        }
+        current = current->next;
+    }
+
+    return 0;
+}
+

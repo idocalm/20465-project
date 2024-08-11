@@ -1,28 +1,23 @@
-macr m_macr
-cmp r3, #-6
-bne END 
+; Macro errors here - DETECTED
+macr 
+    cmp r3, #-6
+    bne END 
 endmacr 
 
-.entry LIST
-.extern fn1
+endmacrendmacrendmacrendmacrendmacrendmacrendmacrendmacrendmacr
 
-MAIN:           add r3,LIST
-                jsr fn1
-LOOP:           prn #48
-                lea STR,r6
-                inc r6 
-                mov *r6, L3
-                sub r1,r4 
-                m_macr
-                add r7, *r6
-                clr K
-                sub L3, L3
-.entry MAIN       
-                jmp LOOP 
-END:              stop 
-STR:            .string "abcd" 
-LIST:           .data 6, -9
-                .data -100
-K:              .data 31
-.extern L3
+macr r1 
+    cmp r3, #-6
+    bne END
+endmacr 
 
+macr r2
+    stop 
+endmacr d  
+
+a macr test 
+    cmp r3, #-6
+    bne END
+endmacr
+
+.extern m_macr

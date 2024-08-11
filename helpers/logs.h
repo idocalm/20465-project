@@ -10,16 +10,17 @@
 
 /* - Prototypes - */
 
+void set_file_name(char *name);
+
 void red_text();
-void green_text();
 void yellow_text();
+void green_text();
 void reset_text();
 
-
 void log_error(char *format, ...);
-void log_warning(char *format, ...);
+void log_line_error(int line_num, char *full_line, char *reason, ...);
 void log_success(char *format, ...);
+void log_warning(char *format, ...);
 void log_info(char *format, ...);
-void log_debug(char *format, ...);
 
 #endif

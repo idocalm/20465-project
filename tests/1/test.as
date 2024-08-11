@@ -13,11 +13,9 @@
 .entry MAIN, LOOP
 .entry MAIN LOOP 
 
-
 ; Error: LOOP defined as entry & extern - DETECTED
 .entry LOOP
 .extern LOOP
-
 
 ; Warning: Label at the beginning of a .entry / .extern line
 CHECKA: .entry MAIN

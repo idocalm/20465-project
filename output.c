@@ -1,44 +1,29 @@
 #include "output.h"
 
 /**
- * @brief Checks if an entry exists in the labels table 
- * @param labels The labels struct
- * @return 1 if an entry exists, 0 otherwise
-*/
-int does_entry_exist(Labels *labels) {
-    LabelEntry *current = labels->head;
-
-    while (current != NULL)
-    {
-        if (current->type == ENTRY_LABEL)
-        {
-            return 1;
-        }
-        current = current->next;
-    }
-
-    return 0;
-}
-
-/**
-    * @brief Checks if there is any usage of an extern label
-    * @param extern_usage the extern usage list maintained through the second pass 
-    * @return 1 if an extern exists, 0 otherwise
+    * @brief Converts a given integer to an octal string
+    * @param data - the integer to be converted
+    * @return a string representing the octal value of the integer
 */
 
-int does_extern_exist(List *extern_usage) {
-    Node *current = extern_usage->head;
+char *convert_to_octal(int data) {
+    char *octal = safe_malloc(OCTAL_SIZE + 1);
+    int i = 0;
+    int mask = 0x7;
 
-    while (current != NULL)
+    for (i = 0; i < OCTAL_SIZE; i++)
     {
-        if (current->data != NULL)
-        {
-            return 1;
-        }
-        current = current->next;
+        octal[i] = '0';
+    }
+    octal[OCTAL_SIZE] = '\0';
+
+    for (i = 0; i < OCTAL_SIZE; i++)
+    {
+        octal[OCTAL_SIZE - i - 1] = (data & mask) + '0';
+        data >>= 3;
     }
 
-    return 0;
+    return octal;
 }
 
 
@@ -122,37 +107,23 @@ void build_externals(FILE *ext_file, List *extern_usage) {
 
 void create_output_files(char *file_name, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
 
-    int i = 0;
     FILE *ob_file, *ent_file, *ext_file; /* The output files */
 
     int create_ent = 0, create_ext = 0; /* Flags to indicate if the files need to be created */
-    char *ent_file_name = safe_malloc(strlen(file_name) + 2);
-    char *ext_file_name = safe_malloc(strlen(file_name) + 2);
-    char *ob_file_name = safe_malloc(strlen(file_name) + 1);
+    size_t len = strcspn(file_name, "."); /* The length of the file name without the .am */
+    char *ent_file_name = safe_malloc(len + 5); /* +5 --> .ent\0 */
+    char *ext_file_name = safe_malloc(len + 5); /* +5 --> .ext\0 */
+    char *ob_file_name = safe_malloc(len + 4); /* +4 --> .ob\0 */
 
+    /* Copy the file name */
+    strncpy(ent_file_name, file_name, len);
+    strncpy(ext_file_name, file_name, len);
+    strncpy(ob_file_name, file_name, len);
 
-    ent_file_name[strlen(file_name) + 1] = '\0';
-    ext_file_name[strlen(file_name) + 1] = '\0';
-    ob_file_name[strlen(file_name)] = '\0';
-
-    /* Copy the file name until the . */
-    for (; i < strlen(file_name) && file_name[i] != '.'; i++)
-    {
-        ent_file_name[i] = file_name[i];
-        ext_file_name[i] = file_name[i];
-        ob_file_name[i] = file_name[i];
-    }
-    ent_file_name[i] = '\0';
-    ext_file_name[i] = '\0';
-    ob_file_name[i] = '\0';
-
-    /* Add the file extensions (according to the file type) */
-    strcat(ent_file_name, ".ent");
-    strcat(ext_file_name, ".ext");
-    strcat(ob_file_name, ".ob");
-
-
-
+    /* Add .ob / .ent / .ext */
+    sprintf(ent_file_name + len, ".ent");
+    sprintf(ext_file_name + len, ".ext");
+    sprintf(ob_file_name + len, ".ob");
 
     /* Open the files */
 
@@ -167,7 +138,7 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
         build_entries(ent_file, labels);
     }
    
-    if (does_extern_exist(extern_usage)) {
+    if (!is_list_empty(extern_usage)) {
         create_ext = 1;
         ext_file = open_file(ext_file_name, "w");
         build_externals(ext_file, extern_usage);
@@ -178,11 +149,12 @@ void create_output_files(char *file_name, Labels *labels, List *extern_usage, ma
         fclose(ent_file);    
     }
 
-    if (create_ext) {
+    if (create_ext) { 
         fclose(ext_file);
     }
 
     fclose(ob_file);
+    
 
     safe_free(ent_file_name);
     safe_free(ext_file_name);

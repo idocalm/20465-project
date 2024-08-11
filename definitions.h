@@ -1,31 +1,43 @@
 
-#ifndef globals_H
-#define globals_H
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
 
 #define INITIAL_IC_VALUE 100
 #define MAX_LINE_SIZE 80
 #define MAX_OPERANDS 2
 #define MAX_LABEL_SIZE 31
-#define NON_VALID_INTEGER 2048 /* The maximum number represented in 12 bits */
-#define MIN_12_BIT_NUMBER -2048
-#define MAX_12_BIT_NUMBER 2047
+#define NON_VALID_INTEGER 32800 /* A reserved non-valid integer that can't never be expected because it's a 15+ bit number */
 
+/* Limits for numbers in the assembly code */
+#define SIGNED_15_MIN -16384
+#define UNSIGNED_15_MIN 0
+#define UNSIGNED_15_MAX 32767
+
+#define SIGNED_12_MIN -2048
+#define UNSIGNED_12_MIN 0
+#define UNSIGNED_12_MAX 4095
 
 /* A note: As page 58 says in the booklet we are allowed to limit the assembler to a certain size.
            The system only has 4096 cells of memory so we limit ourselves to that size.
-*/      
+*/
+
 #define ASSEMBLER_MAX_CAPACITY (4096 - INITIAL_IC_VALUE)
 
 /* Each machine word, whether it's a code or a data word, is always made by a 15 bit integer. */
 typedef struct {
-    unsigned int data: 15;
+    int data: 15;
 } machine_word; 
+
+/* Each operation is defined by the number of operands it needs. The group = the EXACT num of operands. 
+    Groups are also in pages 35-37 of the booklet */
 
 typedef enum {
     NO_OPERANDS = 0,
     SINGLE_OPERAND,
     TWO_OPERANDS 
 } OperationGroup; 
+
+/* Notice that we would define any unknown type of operand with address mode -1. */
 
 typedef enum {
     UNKNOWN_ADDRESS = -1,
@@ -81,5 +93,10 @@ typedef enum {
     NO_PASS_ERROR,
     FOUND_ERROR
 } PassError; /* Used mainly to signal if the first / second pass wen't ok or not */
+
+typedef enum {
+    LINE_DATA, 
+    LINE_CODE
+} LineType;
 
 #endif
