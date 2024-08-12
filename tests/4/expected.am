@@ -1,0 +1,12 @@
+A: .string "garbage" extraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ADD1: add r1 r2
+ADD2: add r1,, r2
+ADD3: add r1, r2,
+ADD4: add r1,, r2,
+ADD5: add r1, r2 extra
+ADD6: add r1, r2, r3
+ADD7: add r1
+ADD7: add r1, r2
+ADD_8: add r1, r2
+9ADD9: add r1, r2
+STR1: .string "abcd" extra

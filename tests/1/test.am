@@ -1,0 +1,20 @@
+.data 6,, -9 
+.data 6,
+.string "Hello 
+.string Hello"
+.string 6
+.string "Hello", ddd
+.entry MAIN, LOOP
+.entry MAIN LOOP 
+.entry LOOP
+.extern LOOP
+.entry
+.extern
+add                 
+CHECKA: .entry MAIN
+CHECKB: .extern L3
+CHECKC .entry MAIN
+CHECKD CHECKE: prn #48
+CHECKF : .extern L3
+r1: stop
+add: stop

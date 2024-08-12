@@ -3,7 +3,6 @@ macr
     stop 
 endmacr 
 
-
 ; Macro with extra 
 macr name extra 
     stop
@@ -23,3 +22,6 @@ endmacr
 macr valid2
     stop
 endmacr extra
+
+; Label with macro name 
+valid: .data 5

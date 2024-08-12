@@ -2,4 +2,3 @@
 .git
 asm
 **/*.o
-tests/**/*.am
