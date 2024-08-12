@@ -89,7 +89,6 @@ Register get_register(char *str)
     /* Check that the string is 2 characters long, with 'r' as the first character and then a digit */
     if (str[0] == 'r' && isdigit(str[1]))
     {
-        /* TODO: Here detect error if the digit's not good ! !! ! ! ! */
         int digit = str[1] - '0'; /* Convert the digit to an integer using ASCII */
         return digit >= 0 && digit <= 7 ? digit : UNKNOWN_REGISTER;
  
