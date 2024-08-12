@@ -47,7 +47,7 @@ void remove_all_spaces(char *p) {
     * @param src - the source string
 */
 
-char* copy_string_until_space(const char *src)
+char* copy_string_until_space(char *src)
 {
     char *output = (char *)malloc(MAX_LINE_SIZE + 1); /* Allocate for the new string */
     int i = 0, j = 0;

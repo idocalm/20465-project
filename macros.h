@@ -23,8 +23,8 @@ typedef enum {
     MACRO_ERROR
 } MacroError;
 
-MacroError handle_macros(char *p_fileName);
-void *search_in_macros(char *line, List *macros);
+MacroError handle_macros(char *file_name);
+void *search_in_macros(char *str, List *macros);
 int validate_label(char *line, int type, List *macros, int line_num);
 
 MacroError replace_macros(FILE *input_file, FILE *output_file, char *output_file_name);

@@ -68,6 +68,7 @@ int validate_operand_list(char *line, int line_num, int report_error) {
     * @param operands - already allocated array to store operands
     * @param operands_count - the number of operands we will find
     * @param line_num - the line number (for error reporting)
+    * @return 1 - no error, 0 - error found
 */
 
 int get_operands(char *line, char **operands, int *operands_count, int line_num) {

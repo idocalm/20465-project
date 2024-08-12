@@ -67,11 +67,11 @@ void *search_in_macros(char *str, List *macros) {
 */
 int validate_label(char *line, int type, List *macros, int line_num) {
     char *label = NULL;
-    char *searching = type == 0 ? ".entry" : ".extern";
+    char *searching = type == 0 ? ".entry" : ".extern"; /* The command we're looking for */
     char *look_for_label = strstr(line, searching) + strlen(searching);
     skip_spaces(&look_for_label);
 
-    label = copy_string_until_space(look_for_label);
+    label = copy_string_until_space(look_for_label); 
     if (label[0] != '\0' && search_in_macros(label, macros) != NULL) {
         log_line_error(line_num, line, "Invalid label in .extern command: the label '%s' is also a macro. ", label);
         safe_free(label);

@@ -98,7 +98,6 @@ Register get_register(char *str)
     return UNKNOWN_REGISTER;
 }
 
-
 /**
     * @brief Checks if a string is a reserved word. 
     * @param str - the string

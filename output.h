@@ -9,6 +9,7 @@
 
 /* - Prototypes - */
 
+char *convert_to_octal(int data);
 void build_ob(FILE *ob_file, machine_word **code_image, machine_word **data_image, int *ic, int *dc);
 void build_entries(FILE *ent_file, Labels *labels);
 void build_externals(FILE *ext_file, List *extern_usage);

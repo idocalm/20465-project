@@ -14,7 +14,7 @@
 
 void skip_spaces(char **p);
 void remove_all_spaces(char *line);
-char* copy_string_until_space(const char *src);
+char* copy_string_until_space(char *src);
 int is_integer(char *p);
 
 

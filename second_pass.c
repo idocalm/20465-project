@@ -120,14 +120,27 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
     safe_free(value);
 }
 
+/**
+    * @brief Handles the operands of an instruction (replaces labels with their values)
+    * @param p_line The line
+    * @param line_num The line number
+    * @param labels The labels table
+    * @param extern_usage The extern usage list
+    * @param code_image The code image
+    * @param ic_counter The instruction counter
+    * @param first_pass_error A flag to indicate if an error was found in the first pass
+    * @param found_error A flag to indicate if an error was found
+*/
+
+
 void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_usage, machine_word **code_image, int *ic_counter, int first_pass_error, int *found_error) {
     
     int is_dest_reg, is_source_reg; /* We use these to check if the encoding will use a signular word for 2 operands */
     /* Operands information */
     char **operands;
     int operands_count = 0;
-    AddressMode dest = UNKNOWN_ADDRESS;
-    AddressMode source = UNKNOWN_ADDRESS;
+    AddressMode dest = UNKNOWN_ADDRESS; /* Destination address mode */
+    AddressMode source = UNKNOWN_ADDRESS; /* Source address mode */
 
     /* Find the operands and put them in the array */
     operands = (char **) safe_malloc(MAX_OPERANDS * (MAX_LINE_SIZE + 1) * sizeof(char *)); 
@@ -140,8 +153,10 @@ void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_us
         return;
     }
 
+    /* Insert the operands into the array */
     get_operands(p_line, operands, &operands_count, line_num);
 
+    /* Update address modes */
     find_address_modes(operands, operands_count, &dest, &source);
 
     *ic_counter += 1;

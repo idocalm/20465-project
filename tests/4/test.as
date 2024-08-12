@@ -34,4 +34,3 @@ ADD_8: add r1, r2
 
 ; Invalid string
 STR1: .string "abcd" extra
-

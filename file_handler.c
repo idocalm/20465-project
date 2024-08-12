@@ -67,11 +67,6 @@ void handle_file(char *file_name) {
         found_error = 1;
     }
 
-    /**
-    debug_labels(labels);
-    */    
-
-
     /* STAGE 3: Start second pass */
 
     if ((second_pass(new_file_name, labels, extern_usage, code_image, data_image, found_error) == NO_PASS_ERROR) && !found_error) {

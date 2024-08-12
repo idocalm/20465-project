@@ -7,23 +7,24 @@
 */
 
 char *convert_to_octal(int data) {
-    char *octal = safe_malloc(OCTAL_SIZE + 1);
+    char *octal = safe_malloc(OCTAL_SIZE + 1); /* Allocate memory for the octal string */
     int i = 0;
-    int mask = 0x7;
+    int mask = 0x7; 
 
     for (i = 0; i < OCTAL_SIZE; i++)
     {
-        octal[i] = '0';
+        octal[i] = '0'; /* Initialize the string with 0's */
     }
     octal[OCTAL_SIZE] = '\0';
 
     for (i = 0; i < OCTAL_SIZE; i++)
     {
-        octal[OCTAL_SIZE - i - 1] = (data & mask) + '0';
+        
+        octal[OCTAL_SIZE - i - 1] = (data & mask) + '0'; 
         data >>= 3;
     }
 
-    return octal;
+    return octal; /* Return the octal string */
 }
 
 
