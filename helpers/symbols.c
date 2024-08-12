@@ -169,6 +169,13 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
 int is_label(char *label) {
     char *ptr = label;
 
+    skip_spaces(&ptr); /* Skip spaces */
+
+    /* Label must begin with an alphabit letter */
+    if (!isalpha(*ptr)) {
+        return 0;
+    }
+
     /* Label must contain only letters and digits */
     while (*ptr != '\0' && *ptr != '\n') {
         if (!isalpha(*ptr) && !isdigit(*ptr)) {

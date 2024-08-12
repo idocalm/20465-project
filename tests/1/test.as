@@ -17,6 +17,15 @@
 .entry LOOP
 .extern LOOP
 
+; Error: .entry without arguments - DETECTED
+.entry
+
+; Error: .extern without arguments - DETECTED
+.extern
+
+; Error: command without arguments - DETECTED
+add                 
+
 ; Warning: Label at the beginning of a .entry / .extern line
 CHECKA: .entry MAIN
 CHECKB: .extern L3

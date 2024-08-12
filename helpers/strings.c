@@ -60,22 +60,9 @@ char* copy_string_until_space(const char *src)
 
     output[i] = '\0'; /* Null terminate the string */
 
-    return deoutputst;
+    return output;
 }
 
-/**
-    * @brief Checks if a given string is a comment line 
-    * @param p_line - the pointer to the string
-    * @return 1 if the string is a comment, 0 otherwise
-*/
-
-int is_comment(char *p_line) {
-
-    /* According to the forum, comment lines can't appear mid-line */
-
-    skip_spaces(&p_line);
-    return *p_line == COMMENT_PREFIX; 
-}
 
 /**
     * @brief Checks if a given string is an integer that can be represented in 12 bits

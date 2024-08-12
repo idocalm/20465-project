@@ -98,8 +98,9 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
 */
 
 int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *labels, machine_word **code_image) {
+    
     char *operation_name = NULL; 
-    char **operands = safe_malloc(MAX_OPERANDS * sizeof(char *)); /* Storing up to 2 extra operands of the first word */
+    char **operands = (char **) safe_malloc(MAX_OPERANDS * (MAX_LINE_SIZE + 1) * sizeof(char *)); /* Storing up to 2 extra operands of the first word */
     int operands_count = 0; /* The number of operands we have */
     char *p_line = line; /* A pointer to the line */
 
@@ -170,8 +171,8 @@ int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *lab
 
     extract_address_modes(operands, operands_count, &dest, &source, line_num, &found_error); /* Extract the address modes to dest/source */
     /* Now validate the adress modes are ok with the operation */
-    if (!valid_command_with_operands(op, dest, source)) {
-        log_line_error(line_num, line, "The operation: does not support one or more operands addressing modes. (Dest: %d source: %d)", dest, source);
+    if (!valid_command_with_operands(op, dest, source) && !found_error) {
+        log_line_error(line_num, line, "The operation does not support one or more operands addressing modes. (Dest: %d source: %d)", dest, source);
         found_error = 1;
     }
 

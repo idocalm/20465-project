@@ -12,18 +12,26 @@
 int validate_operand_list(char *line, int line_num, int report_error) {
     char *operand = NULL;
     char *last = NULL;
+    int found_error = 0;
     char *p_line = line;
 
     skip_spaces(&p_line);
     last = p_line + strlen(line) - 1;
 
-    /* Check if after skipping the spaces there's an illegal ',' */
-    if (p_line[0] == ',') {
-        if (report_error) 
-            log_line_error(line_num, line,"Invalid comma: The argument list starts with a comma");
-        return 0;
+    if (strlen(p_line) == 0) {
+        printf("Empty line\n");
+        return 1; /* No operands */
     }
 
+    /* Check if after skipping the spaces there's an illegal ',' */
+    if (p_line[0] == ',') {
+        if (report_error) {
+            log_line_error(line_num, line, "Invalid comma: The argument list starts with a comma");
+        }
+        found_error = 1;
+    }
+
+    
     /* Skip spaces from the end going backwards */
     while (isspace(*last)) {
         last--;
@@ -32,9 +40,10 @@ int validate_operand_list(char *line, int line_num, int report_error) {
     /* Check if after skipping all the arguments, the line ends with an ',' */
 
     if (*last == ',') {
-        if (report_error)
+        if (report_error) {
             log_line_error(line_num, line, "Invalid comma: The argument list ends with a comma");
-        return 0;
+        }
+        found_error = 1;
     }
 
     /* Check for no double commas */
@@ -42,14 +51,15 @@ int validate_operand_list(char *line, int line_num, int report_error) {
         operand++; 
         skip_spaces(&operand); /* Skip spaces after the comma because ,     , is also invalid */
         if (*operand == ',') {
-            if (report_error)
-                log_line_error(line_num, line, "Invalid comma: The argument list contains a double comma");
-            return 0; /* Found an error */
+            if (report_error) {
+                log_line_error(line_num, line, "Invalid comma: The argument list contains a double comma"); 
+            }
+            found_error = 1; /* Found an error */
         }
         p_line = operand + 1; /* Move pas the , */
     }
 
-    return 1;
+    return !found_error;
 }
 
 /**
@@ -64,26 +74,39 @@ int get_operands(char *line, char **operands, int *operands_count, int line_num)
     int i = 0;
     char *operand = NULL;
 
+    /* Copy so we won't damage the original string */
+    char *line_copy = (char *) safe_malloc(strlen(line) + 1);
+    strcpy(line_copy, line);
+    line_copy[strlen(line)] = '\0';
+    /* realloc line copy to remove the last \n */
+
     if (!validate_operand_list(line, line_num, 1)) { /* Check if the operand list is valid (this will report errors) */
+        safe_free(line_copy);
         return 0;
     }
 
-    /* split line by ',' */
-    while ((operand = strtok(line, ",")) != NULL) {
+    /* split line_copy by ',' */
+    operand = strtok(line_copy, ",");
+    while (operand != NULL) {
 
         if (i == MAX_OPERANDS + 1) { /* We can't have more then 2 operands */
+            safe_free(line_copy);
             return 0;
         }
 
-        operands[i] = (char *) safe_malloc(strlen(operand) + 1);
         remove_all_spaces(operand); /* Remove all spaces from the operand */
-        strcpy(operands[i], operand);
+        
+        if (strlen(operand) > 0) { /* If the operand is not empty  */
+            operands[i] = (char *) safe_malloc(strlen(operand) + 1);
+            strcpy(operands[i], operand);
+            i++;
+        } 
 
-        i++;
-        line = NULL; 
+        operand = strtok(NULL, ",");        
     }
     *operands_count = i;
 
+    safe_free(line_copy);
     return 1; 
 }
 

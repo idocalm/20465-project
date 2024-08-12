@@ -24,6 +24,7 @@ void *safe_malloc(size_t size)
 }
 
 
+
 /**
     * @brief Reallocates memory of a given size
     * @param ptr - the pointer to the memory that needs changing

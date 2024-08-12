@@ -1,23 +1,37 @@
-; Macro errors here - DETECTED
-macr 
-    cmp r3, #-6
-    bne END 
-endmacr 
 
-endmacrendmacrendmacrendmacrendmacrendmacrendmacrendmacrendmacr
+; Line too long
+A: .string "garbage" extraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
-macr r1 
-    cmp r3, #-6
-    bne END
-endmacr 
+; Missing commas 
+ADD1: add r1 r2
 
-macr r2
-    stop 
-endmacr d  
+; Following commas 
+ADD2: add r1,, r2
 
-a macr test 
-    cmp r3, #-6
-    bne END
-endmacr
+; Extra commas
+ADD3: add r1, r2,
 
-.extern m_macr
+; Following & extra commas
+ADD4: add r1,, r2,
+
+; Extra text
+ADD5: add r1, r2 extra
+
+; Too many arguments
+ADD6: add r1, r2, r3
+
+; Too few arguments
+ADD7: add r1
+
+; Duplicate label (ADD7 was already defined)
+ADD7: add r1, r2
+
+; Invalid label name - has _
+ADD_8: add r1, r2
+
+; Invalid label name - starts with Integer
+9ADD9: add r1, r2
+
+; Invalid string
+STR1: .string "abcd" extra
+

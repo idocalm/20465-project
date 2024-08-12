@@ -1,40 +1,42 @@
 #include "macros.h"
 
-/**
-    * @brief Main function to handle all phases of macro detection and replacement (pre-processor)
-    * @param file_name - the name of the file (.am here)
-    * @param macros - the list of macros we're going to fill.
-    * @return MacroError - the result of the operation (NO_MACRO_ERROR for success or MACRO_ERROR for failure of some sort)
-*/
-MacroError handle_macros(char *file_name, List *macros) {
+/** 
+    * @brief Handles macro replacement
+    * @param file_name - the name of the file
+    * @return a MacroError
 
-    MacroError res = NO_MACRO_ERROR; /* The result of the operation */
+    Note: according to the forum and booklet it's safe to assume that a macro definition appears before the first use of it, 
+    it's also ok to assume that a label using a macro name (if such exists), will appear only after the macro definition.
+
+    In any other case we would have to work with 2 passes on the file, and who would want that
+
+*/
+MacroError handle_macros(char *file_name) {
 
     FILE *input_file = open_file(file_name, "r"); /* Open the file with reading perm */
+    FILE *output_file = NULL; /* The output file */
+    /* Create the output file name */
+    char output_file_name[MAX_LINE_SIZE + 1];
+    strcpy(output_file_name, file_name);
+    output_file_name[strlen(file_name) - 1] = 'm';
 
-    /* We first extract all the macros to a list, while checking for possible errors */
-    if (extract_macros(input_file, macros) != NO_MACRO_ERROR) {
-        res = MACRO_ERROR;
-    }
-
+    /* Open the output file */
+    output_file = open_file(output_file_name, "w");
     /* Replace macros, check for "label=macro" errors and create .am file */
-    if (replace_macros(input_file, file_name, macros, res) != NO_MACRO_ERROR) {
-        res = MACRO_ERROR;
-    }
-
-    return res;
+    return replace_macros(input_file, output_file, output_file_name);
 }
 
 /**
-    * @brief Function that looks a up a macro with a name that matches the line
-    * @param line - the line from the file to search in 
-    * @param macros - the list of macros to search in
+    * @brief Searches for a macro in a given line
+    * @param str - the string to search for 
+    * @param macros - list of macros
+    * @return the macro if found, NULL otherwise
 */
 
-void *search_in_macros(char *line, List *macros) {
+void *search_in_macros(char *str, List *macros) {
     Node *current = macros->head;
     while (current != NULL) {
-        char *lookup = strstr(line, current->key); /* Check for a match */
+        char *lookup = strstr(str, current->key); /* Check for a match */
 
         if (lookup != NULL) {
             lookup += strlen(current->key);
@@ -56,13 +58,13 @@ void *search_in_macros(char *line, List *macros) {
 }
 
 /**
-    * @brief Validate that the argument of a extern instruction is not a macro name.
-    * @param line - the line to check
-    * @param macros - the list of macros
+    * @brief Validates that a label in a .entry / .extern command is not also a macro. 
+    * @param line - the line to validate
     * @param type - 0 for .entry, 1 for .extern
-    * @param line_num - the line number (for errors )
+    * @param macros - list of macros
+    * @param line_num - the line number
+    * @return 1 if the label is valid, 0 otherwise
 */
-
 int validate_label(char *line, int type, List *macros, int line_num) {
     char *label = NULL;
     char *searching = type == 0 ? ".entry" : ".extern";
@@ -80,286 +82,177 @@ int validate_label(char *line, int type, List *macros, int line_num) {
     return 1;
 }
 
-
 /**
-    * @brief Main replacement of macros function. In addition, we analyze labels that appear and check they're not macros. 
-    * @param input_file - the file to read from
-    * @param file_name - the name of the file (so we can create .as files) 
-    * @param macros - the list of macros (found at extract_macros func )
-    * @param found_error - a flag to see if an error was found before hand (if so, we dont create the .am file)
-    * @return MacroError - the result of the operation (NO_MACRO_ERROR for success or MACRO_ERROR for failure)
+    * @brief Detects & replaces macros in a given file
+    * @param input_file - the input file
+    * @param output_file - the output file
+    * @param output_file_name - the name of the output file 
+    * @return a MacroError
 
+    Note: this function will also DELETE the .am file if an error is found so we won't end up with unwanted files
 */
 
-MacroError replace_macros(FILE *input_file, char *file_name, List *macros, MacroError found_error) {
-
+MacroError replace_macros(FILE *input_file, FILE *output_file, char *output_file_name) {
     int line_num = 0; /* Used to keep track of the current line in the input file. */
     int inside_macro = 0; /* Used to keep track of macro definitions*/
-    
-    char line[MAX_LINE_SIZE + 2]; /* Will store the line with fgets */ 
-    char *p_line; 
-    size_t file_size; /* So we can allocate the right size for the output */ 
-    char *output; /* The output string */
-    FILE *output_file; 
-    int found_error_now = 0; /* Used to check if an error was found in the current line */
-    void *result; /* Matched macro that we would replace with the line */
+    char line[MAX_LINE_SIZE + 2]; /* Will store the line with fgets */
+    char *p_line;
 
-    /* Label def */
-    char label[MAX_LINE_SIZE + 1];
-    label[MAX_LINE_SIZE] = '\0';
+    List *macros = list_create(); /* List of macros */
 
-    /* Find the file size */
-    fseek(input_file, 0, SEEK_END);
-    file_size = ftell(input_file);
-    fseek(input_file, 0, SEEK_SET);
+    char label[MAX_LINE_SIZE + 1]; /* to store the label */
+    int found_error = 0; /* Did we find an error? */
+    int start_match, end_match; /* Used to determine if we're in a macro definition */
 
-    /* 
-        Allocate for output. 
-        Note that we do it this way because we dont know yet if we wont run into an error,
-        only after we finish going over the lines do we know if .am file should or should not be created! 
-    */
+    char *current_name = NULL; /* Current macro name*/
+    char *current_content = NULL;  /* Current macro content */
+    int current_content_size = 0; /* Current macro content size */
 
-    output = (char *) safe_malloc(file_size + 1);
-    output[0] = '\0';
+    label[MAX_LINE_SIZE] = '\0'; 
 
-    /* Label information (for a possible one/ if it exist s) */ 
-
-    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL) 
-    {   
+    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL) {
         line_num++;
         p_line = line;
 
-        /* Skip any leading spaces */
+        /* Check if the line is too long */
+        if (strlen(line) > MAX_LINE_SIZE) {
+            log_line_error(line_num, line, "Line is too long. (%d chars)", strlen(line));
+            found_error = 1;
+        }
+    
         skip_spaces(&p_line);
 
-        if (*p_line == '\0' || *p_line == '\n') {
-            /* Empty lines */
+        if (*p_line == '\0' || *p_line == '\n' || *p_line == COMMENT_PREFIX) /* Empty or comment lines */
             continue;
-        }
 
-        /* Validate labels are not macros */
+        /* Find label */
+
         memset(label, 0, MAX_LINE_SIZE + 1);
         is_label_error(p_line, line_num, label, 0);
-        if (label[0] != '\0' && search_in_macros(label, macros) != NULL) {
+        /* Check if the label is a macro */
+        if (label[0] != '\0' && search_in_macros(label, macros) != NULL) { /* The is label error func will place a \0 at the beginning if the label has some error. */
             log_line_error(line_num, line, "Invalid label: the label '%s' is also a macro.", label);
-            found_error_now = 1;
+            found_error = 1;
             continue;
         }
 
         /* Validate .entry / .extern are not macros */
 
         if (strstr(p_line, ".entry") != NULL && !validate_label(p_line, 0, macros, line_num)) {
-            found_error_now = 1;
-            continue;
-        }
-
-        if (strstr(p_line, ".extern") != NULL && !validate_label(p_line, 1, macros, line_num)) {
-            found_error_now = 1;
-            continue;   
-        }
-        
-        /* We skip a command without copying it to the .am file */
-        if (is_comment(p_line))
-            continue;
-
-        if (inside_macro && strncmp(p_line, MACRO_END_PREFIX, strlen(MACRO_END_PREFIX)) == 0) {
-            /* Reached the end of a macro definition */
-            inside_macro = 0; 
-            continue;
-        } 
-
-        if (!inside_macro && strncmp(p_line, MACRO_START_PREFIX, strlen(MACRO_START_PREFIX)) == 0 && isspace(p_line[strlen(MACRO_START_PREFIX)])) {
-            /* Reached the start of a macro definition */
-            inside_macro = 1;
-            continue;
-        }
-
-        /* We avoid copying the actual content of any macro into the .am file */
-        if (inside_macro) 
-            continue;
-        
-        skip_spaces(&p_line);
-
-        result = search_in_macros(p_line, macros);
-        if (result != NULL) /* Add the macro content to the output */
-            strcat(output, result);
-        else /* Add the line to the output */
-            strcat(output, line);
-    }
-
-    /* Close the input file */
-    close_file(input_file);
-
-    if (found_error_now || found_error) {
-        safe_free(output);
-        return MACRO_ERROR;
-    }
-
-    /* Proceed with .am creation */
-
-    output = (char *) safe_realloc(output, strlen(output) + 1);
-    output[strlen(output)] = '\0';
-
-    file_name[strlen(file_name) - 1] = 'm';
-    output_file = open_file(file_name, "w");
-
-    /* Write the content to the .am file */
-    fprintf(output_file, "%s", output);
-
-    /* Close & free memory */
-    close_file(output_file);
-    safe_free(output);
-
-    log_success("Replaced macros successfully\n");
-    return NO_MACRO_ERROR;
-
-}
-
-/**
-    * @brief Extracts all macros from the input file and stores them in the macros list
-    * @param input_file - the file to read from
-    * @param macros - the list to store the macros in
-    * @return MacroError - the result of the operation (NO_MACRO_ERROR for success or MACRO_ERROR for failure)
-*/
-MacroError extract_macros(FILE *input_file, List *macros) {
-
-    int line_num = 0;  
-    char line[MAX_LINE_SIZE + 2];
-    char *p_line;
-
-    int found_error = 0;
-    char *macro_name = NULL;
-    char *macro_content = NULL;
-    char *p_search;
-    int inside_macro = 0;
-
-    size_t macroContentSize = 0;
-
-    while (fgets(line, MAX_LINE_SIZE + 2, input_file) != NULL) 
-    {
-        p_line = line;
-        line_num++;
-
-        if (strlen(p_line) > MAX_LINE_SIZE) {
-            log_line_error(line_num, line, "Line is too long. (%d chars)", strlen(p_line));
             found_error = 1;
             continue;
         }
 
-        p_search = p_line;
-        skip_spaces(&p_search);
+        if (strstr(p_line, ".extern") != NULL && !validate_label(p_line, 1, macros, line_num)) {
+            found_error = 1;
+            continue;   
+        }
 
-        if (!inside_macro && strncmp(p_search, MACRO_START_PREFIX, MACRO_START_PREFIX_LEN) == 0) { /* Search for a possible macro definition */
-            /* Check if the next character is a space */
-            p_search += MACRO_START_PREFIX_LEN;
-            if (!isspace(*p_search)) {
-                continue; /* Fake definition */
-            }
+        /* Start match: is this a new macro? */
+        start_match =  strncmp(p_line, MACRO_START_PREFIX, MACRO_START_PREFIX_LEN) == 0;
+        /* End match: is this the end of a macro? */
+        end_match = strncmp(p_line, MACRO_END_PREFIX, MACRO_END_PREFIX_LEN) == 0;
 
-            /* Allocate extra space for the macro name */
-            if (macro_name) {
-                safe_free(macro_name);
-                macro_name = NULL;
-            }
-            /* Allocate space for the macro content */
-            if (macro_content) 
-            {
-                safe_free(macro_content);
-                macro_content = NULL;
-            }
+        if (!inside_macro && start_match && isspace(*(p_line + MACRO_START_PREFIX_LEN))) { /* Search for a possible macro definition */
+            char *validator = p_line + MACRO_START_PREFIX_LEN;
 
-            macro_content = (char *) safe_malloc(1);
-            macro_content[0] = '\0';
-            macroContentSize = 1; 
-
-            skip_spaces(&p_search);
-
-            /* Copy the macro name */
-            macro_name = copy_string_until_space(p_search);
+            skip_spaces(&validator);
+            current_name = copy_string_until_space(validator);
 
             /* Check if the macro name is valid */
-            if (strlen(macro_name) <= 0) {
+            if (strlen(current_name) <= 0) {
                 log_line_error(line_num, line, "Invalid macro definition: Macro name is missing");
+                safe_free(current_name);
                 found_error = 1;
                 continue;
             }
-
-
 
             /* Make sure there are no non-space characters after the macro name */
-            p_search += strlen(macro_name);
-            skip_spaces(&p_search);
-            if (*p_search != '\0' && *p_search != '\n') {
+            validator += strlen(current_name);
+            skip_spaces(&validator);
+
+            /* Check that there are no extra chars over the first word */
+            if (*validator != '\0' && *validator != '\n') {
                 log_line_error(line_num, line, "Extraneous characters appear after the macro name.");
+                safe_free(current_name);
                 found_error = 1;
                 continue;
             }
 
-            if (is_reserved_word(macro_name)) {
+            /* Check if the macro name is a reserved word */
+            if (is_reserved_word(current_name)) {
                 log_line_error(line_num, line, "Invalid macro definition: Macro name is a reserved word.");
+                safe_free(current_name);
                 found_error = 1;
                 continue;
             }
-
 
             /* Check if the macro is already defined */
-            if (list_get(macros, macro_name) != NULL) {
+            if (list_get(macros, current_name) != NULL) {
                 log_line_error(line_num, line, "Multiple macro definitions in the same file.");
+                safe_free(current_name);
                 found_error = 1;
                 continue;
             }
 
-            inside_macro = 1;                
+            inside_macro = 1;
+            current_content = (char *) safe_malloc(1);
+            current_content[0] = '\0';
+            current_content_size = 0;
+        } else if (inside_macro && end_match) {
 
-            continue;
+            char *validator = p_line + MACRO_END_PREFIX_LEN;
+            if (!isspace(*validator)) {
+                continue; /* Fake ending (but there will be one later!) */
+            }
 
-        } 
+            inside_macro = 0;
+            skip_spaces(&validator);
 
-        /* Check if the line is the end of the macro */
-        if (strncmp(p_search, MACRO_END_PREFIX, MACRO_END_PREFIX_LEN) == 0) {
-
-            p_search += MACRO_END_PREFIX_LEN;
-            skip_spaces(&p_search);
-
-            if (*p_search != '\0' && *p_search != '\n') {
+            /* Check if there are any extra chars after the end of the macro */
+            if (*validator != '\0' && *validator != '\n') {
                 log_line_error(line_num, line, "Invalid macro definition: Extraneous characters after 'endmacr'.");
+                safe_free(current_content);
+                safe_free(current_name);
                 found_error = 1;
                 continue;
             }
 
-            macro_content[macroContentSize] = '\0';
+            /* Add the macro to the list */
 
-            list_insert_string(macros, macro_name, macro_content);
-
-            /* Free the memory of the macro */
-            safe_free(macro_name);
-            safe_free(macro_content);
-            macro_name = NULL;
-            macro_content = NULL;
-            macroContentSize = 0;
-
-
-            inside_macro = 0; /* We're no longer inside a macro */
-            continue;
-        } 
-
-        if (inside_macro) {
+            current_content[strlen(current_content)] = '\0';
+            list_insert_string(macros, current_name, current_content);
+            safe_free(current_content);
+            safe_free(current_name);
+        } else if (inside_macro) {
             /* Add the line to the macro content */
-            macro_content = (char *) safe_realloc(macro_content, macroContentSize + strlen(p_line) + 1);
-            strcat(macro_content, p_line);
-            macroContentSize += strlen(p_line);
+            current_content_size += strlen(line) + 1;   
+            current_content = (char *) safe_realloc(current_content, current_content_size);
+            strcat(current_content, line);
+        } else {
+
+            /* Search for a macro in the line, if so - replace it with the content */
+            char *search = copy_string_until_space(p_line);
+            void *result = search_in_macros(search, macros);
+
+            /* Add to the file */
+            fprintf(output_file, "%s", result != NULL ? (char *) result : line);
+            safe_free(search);
         }
+
     }
 
-    /* Free memory if needed */
-    if (macro_name) 
-        safe_free(macro_name);
-    if (macro_content)
-        safe_free(macro_content);
+    /* Free memory and close files */
+
+    fclose(input_file);
+    list_free(macros);
+    fclose(output_file);
 
     if (found_error) {
-        return MACRO_ERROR; /* Theres an error somewhere */
+        /* Remove the output file */
+        remove(output_file_name);
+        return MACRO_ERROR; /* Found an error */
     }
 
-    return NO_MACRO_ERROR; /* No errors found */
+    return NO_MACRO_ERROR; /* No errors */ 
 }

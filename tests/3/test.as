@@ -1,21 +1,29 @@
-MAIN:   add     r3, LIST
-LOOP:   prn     #48
-        macr m_macr
-        cmp r3, #-6
-        bne END
-        endmacr
-        lea     STR, r6
-        inc     r6
-        mov     *r6, K
-        sub     r1, r4
-        m_macr
-        dec K
-        jmp LOOP
-END:    stop
-STR:    .string "abcd"
-LIST:   .data 
-        .data -100
-K:      .data 31
 
-.entry
-.extern
+; Addition
+
+macr addition
+        mov      FIVE, r1
+        mov      TEN, r2
+        add      r1, r2
+        prn      r2
+endmacr 
+
+macr multiplication
+        mov      FIVE, r1
+        mov      TEN, r2
+        clr      r3
+        clr      r4
+        LOOP:    cmp      r1, #0
+                 bne      END
+                 add      r2, r3
+                 dec      r1
+                 jmp      LOOP
+        END:     prn      r3
+                 stop
+endmacr
+
+addition
+multiplication
+
+FIVE:  .data    5
+TEN:   .data    10

@@ -14,7 +14,6 @@ void handle_file(char *file_name) {
     int i = 0;
 
     Labels *labels = labels_create(); /* Label table (for first & second pass )*/
-    List *macros = list_create(); /* Macro list (for pre-processor )*/
     List *extern_usage = list_create(); /* Extern usage (mainly for second pass and .ext output file)*/
 
     machine_word *code_image[ASSEMBLER_MAX_CAPACITY]; /* Code image of the machine */
@@ -27,6 +26,8 @@ void handle_file(char *file_name) {
     if (attempt == NULL)
     {
         log_error("Unable to open file '%s'. Skipping to the next file.\n", file_name);
+        list_free(extern_usage);
+        labels_free(labels);
         safe_free(new_file_name);
         return;
     } 
@@ -34,11 +35,10 @@ void handle_file(char *file_name) {
     fclose(attempt);
 
     /* STAGE 1: Pre-processor (macro extracting and replacing ) */
-    if (handle_macros(file_name, macros) != NO_MACRO_ERROR)
+    if (handle_macros(file_name) != NO_MACRO_ERROR)
     {
         /* We can't continue after an error in the macro stage because there's no .am file */
         log_error("One or more errors were found in file '%s' during pre-processor. Moving to the next file.\n", file_name);
-        list_free(macros);
         list_free(extern_usage);
         labels_free(labels);
         safe_free(new_file_name);
@@ -46,12 +46,8 @@ void handle_file(char *file_name) {
         return; 
     }
 
-    set_file_name(file_name); /* Set the file name for the logs */
 
-    /* We no longer need the macros so we can free it */
     log_success("Pre-processor finished successfully for file '%s'\n", file_name);
-
-    list_free(macros);
 
 
     /* Change the file to the .am file */
@@ -61,6 +57,7 @@ void handle_file(char *file_name) {
     }
     new_file_name[i] = 'm';
     new_file_name[i + 1] = '\0';
+    set_file_name(new_file_name); /* Set the file name for the logs */
 
     /* STAGE 2: Start first pass */
 
@@ -69,7 +66,12 @@ void handle_file(char *file_name) {
     } else {
         found_error = 1;
     }
-       
+
+    /**
+    debug_labels(labels);
+    */    
+
+
     /* STAGE 3: Start second pass */
 
     if ((second_pass(new_file_name, labels, extern_usage, code_image, data_image, found_error) == NO_PASS_ERROR) && !found_error) {

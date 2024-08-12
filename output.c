@@ -39,7 +39,7 @@ char *convert_to_octal(int data) {
 void build_ob(FILE *ob_file, machine_word **code_image, machine_word **data_image, int *ic, int *dc) {
     int i = 0;
 
-    fprintf(ob_file, "%d %d\n", *ic - INITIAL_IC_VALUE, *dc);
+    fprintf(ob_file, "  %d %d\n", *ic - INITIAL_IC_VALUE, *dc);
 
     for (i = 0; i < *ic - INITIAL_IC_VALUE; i++)
     {

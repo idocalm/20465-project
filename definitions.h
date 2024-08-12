@@ -17,6 +17,8 @@
 #define UNSIGNED_12_MIN 0
 #define UNSIGNED_12_MAX 4095
 
+#define COMMENT_PREFIX ';'
+
 /* A note: As page 58 says in the booklet we are allowed to limit the assembler to a certain size.
            The system only has 4096 cells of memory so we limit ourselves to that size.
 */

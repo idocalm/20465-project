@@ -126,10 +126,11 @@ void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_us
     /* Operands information */
     char **operands;
     int operands_count = 0;
-    AddressMode dest, source;
+    AddressMode dest = UNKNOWN_ADDRESS;
+    AddressMode source = UNKNOWN_ADDRESS;
 
     /* Find the operands and put them in the array */
-    operands = (char **) safe_malloc(sizeof(char *) * MAX_OPERANDS);
+    operands = (char **) safe_malloc(MAX_OPERANDS * (MAX_LINE_SIZE + 1) * sizeof(char *)); 
 
     /* We don't want to repeat the same error code so if theres a problem faced in first pass we just skip the line*/
 
