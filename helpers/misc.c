@@ -88,7 +88,7 @@ int get_operands(char *line, char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1], int
     operand = strtok(line_copy, ",");
     while (operand != NULL) {
 
-        if (i == MAX_OPERANDS + 1) { /* We can't have more then 2 operands */
+        if (i == MAX_OPERANDS) { /* We can't have more then 2 operands */
             return 0;
         }
 
