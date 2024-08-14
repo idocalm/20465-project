@@ -27,3 +27,6 @@ multiplication
 
 FIVE:  .data    5
 TEN:   .data    10
+
+.entry FIVE
+.entry TEN

@@ -33,5 +33,6 @@ LabelEntry* labels_get_any(Labels* labels, char *key);
 void labels_free(Labels* labels);
 void update_labels(Labels *labels, int ic);
 int does_entry_exist(Labels *labels);
+int get_longest_entry_label(Labels *labels);
 
 #endif

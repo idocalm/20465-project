@@ -13,8 +13,8 @@
 /* -- Prototypes -- */
 
 void skip_spaces(char **p);
-void remove_all_spaces(char *line);
-char* copy_string_until_space(char *src);
+void remove_all_spaces(char *p);
+char* copy_string_until_space(char *p);
 int is_integer(char *p);
 
 

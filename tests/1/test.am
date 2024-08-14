@@ -1,16 +1,16 @@
-.data 6,, -9 
+.data 6,, -9
 .data 6,
-.string "Hello 
+.string "Hello
 .string Hello"
 .string 6
 .string "Hello", ddd
 .entry MAIN, LOOP
-.entry MAIN LOOP 
+.entry MAIN LOOP
 .entry LOOP
 .extern LOOP
 .entry
 .extern
-add                 
+add
 CHECKA: .entry MAIN
 CHECKB: .extern L3
 CHECKC .entry MAIN

@@ -155,7 +155,6 @@ int is_label_error(char *line, int line_num, char *dest, int report_error) {
         return 0; /* No error */
     }
     dest[0] = '\0'; /* Signal it's not a definition */
-
     return 0; /* No error (because there's no label) */
 }
 
@@ -293,6 +292,7 @@ OperationGroup get_operation_group(Operation op) {
 
 AddressMode address_mode(char *operand, int report_errors, int line_num, int *found_error) {
     if (operand[0] == '#') { /* Immediate addressing has '#' followed by a number */
+        
         if (is_integer(operand + 1) == NON_VALID_INTEGER) {
             if (report_errors) {
                 log_line_error(line_num, operand, "Invalid addressing mode: The operand is not a valid number");
@@ -325,6 +325,7 @@ AddressMode address_mode(char *operand, int report_errors, int line_num, int *fo
     * @param line - the line (after extracting a label if exists)
     * @return the type of the line.
 */ 
+
 LineType get_line_type(char *line) {
     char *text = NULL; 
     char *ptr = line;

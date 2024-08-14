@@ -92,6 +92,7 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
     * @param line - the line of code
     * @param line_num - the line number
     * @param ic - the instruction counter
+    * @param label - the label of the line
     * @param labels - the labels table
     * @param code_image - the code image array
     * @return 1 if an error was found, 0 otherwise
@@ -100,7 +101,7 @@ machine_word *build_first_word(Operation op, AddressMode source, AddressMode des
 int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *labels, machine_word **code_image) {
     
     char *operation_name = NULL; 
-    char **operands = (char **) safe_malloc(MAX_OPERANDS * (MAX_LINE_SIZE + 1) * sizeof(char *)); /* Storing up to 2 extra operands of the first word */
+    char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1]; /* Storing up to 2 extra operands of the first word */
     int operands_count = 0; /* The number of operands we have */
     char *p_line = line; /* A pointer to the line */
 
@@ -120,7 +121,7 @@ int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *lab
 
     int found_error = 0; /* Have we found any kind of error through the process? */
 
-    if (label[0] != '\0') { /* The is_label_error function sets the first char to be \0 if somethings wrong with the label */
+    if (label[0] != '\0') { /* The is_label_error function sets first char to '\0' if there is no label */
         LabelEntry *entry = labels_get_any(labels, label); 
         if (entry != NULL) { /* Check if the label is already defined */
             log_line_error(line_num, line, "Label '%s' is already defined in the file", label);
@@ -140,7 +141,6 @@ int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *lab
     if (op == UNKNOWN_OPERATION) { /* We're unfamiliar with the op (received -1) */
         log_line_error(line_num, line, "Unknown operation name '%s'", operation_name);
         safe_free(operation_name);
-        free_operands(operands, operands_count);
         return 1;
     }
 
@@ -194,7 +194,6 @@ int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *lab
 
     if (found_error) { /* If we found an error we don't want to continue */
         safe_free(operation_name);
-        free_operands(operands, operands_count);
         return 1;
     }
 
@@ -215,7 +214,6 @@ int handle_code_line(char *line, int line_num, int *ic, char *label, Labels *lab
 
     /* Free any memory we used */
     safe_free(operation_name);
-    free_operands(operands, operands_count);
 
     return found_error; /* 1 - errors found, 0 - no errors found */
 }

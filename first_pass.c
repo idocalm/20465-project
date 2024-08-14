@@ -47,8 +47,16 @@ PassError first_pass(char *file_name, int *ic, int *dc, Labels *labels, machine_
             continue;
         }
 
-        if (label[0] != '\0') /* The is_label_error function sets the first char to be \0 if somethings wrong with the label */
+        if (label[0] != '\0') /* The is_label_error function sets first char to '\0' if there is no label */
         {
+            char *search = p_line + strlen(label) + 1;
+            remove_all_spaces(search);
+            if (strlen(search) == 0) /* If the label is the only thing in the line */
+            {
+                log_line_error(line_num, line, "Label '%s' has no content.", label);
+                found_error = 1;
+                continue;
+            }
             /* Move the line pointer past the label */
             p_line += strlen(label) + 1;
         }

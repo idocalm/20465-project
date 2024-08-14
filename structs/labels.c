@@ -33,6 +33,7 @@ Labels* labels_create() {
 void labels_insert(Labels* labels, char *key, int value, LabelType type) {
     LabelEntry* new_entry = safe_malloc(sizeof(LabelEntry));
 
+
     new_entry->key = safe_malloc(strlen(key) + 1);
     strcpy(new_entry->key, key); /* Copy the key */
     new_entry->key[strlen(key)] = '\0';
@@ -115,6 +116,7 @@ void labels_free(Labels* labels) {
 /**
     * @brief This function adds the ic value to any DATA_LABEL labels 
     * @param labels The labels struct
+    * @param ic The instruction counter
 
     * Note: this is done to create different "zones" in the system memory, one for the code and one for the data! 
     * Information stated at page 53 of the booklet
@@ -140,6 +142,7 @@ void update_labels(Labels *labels, int ic)
  * @param labels The labels struct
  * @return 1 if an entry exists, 0 otherwise
 */
+
 int does_entry_exist(Labels *labels) {
     LabelEntry *current = labels->head;
 
@@ -154,3 +157,26 @@ int does_entry_exist(Labels *labels) {
 
     return 0;
 }
+
+/**
+    @brief Returns the length of the longest entry label 
+    @param labels The labels struct
+    @return The length of the longest label name (a whole number or zero)
+*/
+
+int get_longest_entry_label(Labels *labels) {
+    LabelEntry *current = labels->head;
+    int longest = 0; /* Length of the longest label name */
+
+    while (current != NULL)
+    {
+        if (current->type == ENTRY_LABEL && strlen(current->key) > longest)
+        {
+            longest = strlen(current->key);
+        }
+        current = current->next;
+    }
+
+    return longest;
+}
+

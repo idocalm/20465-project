@@ -29,5 +29,6 @@ void list_delete(List* list, char *key);
 Node* list_get(List* list, char *key);
 void list_free(List* list);
 int is_list_empty(List *list);
+int get_list_longest_key(List *list);
 
 #endif

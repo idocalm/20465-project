@@ -1,6 +1,9 @@
 #include "memory.h"
 /*
     ------- Memory management  -------
+    Implementing this functions allows us to avoid 
+    repeating the same error handling process on every allocation 
+    around the proj
 */
 
 /**
@@ -8,8 +11,6 @@
     * @param size - the size of the memory
     * @return a pointer to the allocated memory
 
-    Implementing this function allows us to avoid 
-    repeating the same error handling process on every allocation. 
 
 */
 void *safe_malloc(size_t size)
@@ -66,18 +67,18 @@ void safe_free(void *ptr)
 
 /**
     * @brief Opens a file. 
-    * @param filename - the name of the file. 
+    * @param file_name - the name of the file. 
     * @param mode - the reading mode 
     * @return a pointer to the file
 
 */
 
-FILE *open_file(const char *filename, char *mode)
+FILE *open_file(const char *file_name, char *mode)
 {
-    FILE *file = fopen(filename, mode);
+    FILE *file = fopen(file_name, mode);
     if (file == NULL)
     {
-        log_error("System couldn't open file '%s'. Assembler is shutting down.\n", filename);
+        log_error("System couldn't open file '%s'. Assembler is shutting down.\n", file_name);
         exit(EXIT_FAILURE);
     }
     return file;
@@ -129,16 +130,3 @@ void free_data_image(machine_word **data_image, int dc)
     }
 }
 
-/**
-    * @brief Frees the memory of the operands array
-    * @param operands - the array of operands
-    * @param operands_count - the number of operands
-*/
-void free_operands(char **operands, int operands_count) {
-    int i = 0;
-
-    for (; i < operands_count; i++) {
-        safe_free(operands[i]);
-    }
-    safe_free(operands);
-}

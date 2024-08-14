@@ -10,7 +10,7 @@
 */
 
 /**
-    * Create a new blank list 
+    * @brief Create a new blank list 
     * @return A pointer to the new list
 */
 
@@ -21,7 +21,7 @@ List* list_create() {
 }
 
 /**
-    * Insert a string at the begining of the list
+    * @brief Insert a string at the begining of the list
     * @param list - pointer to a list
     * @param key - The key of the new node
     * @param data - The data of the new node
@@ -45,7 +45,7 @@ void list_insert_string(List* list, char *key, char *data) {
 }
 
 /**
-    * Insert an integer 
+    * @brief Insert an integer 
     * @param list - pointer to a list
     * @param key - The key of the new node
     * @param data - The data of the new node
@@ -61,19 +61,16 @@ void list_insert_integer(List* list, char *key, int data) {
     /* Here we only need to copy */
     strcpy(new_node->key, key);
 
-
     *(int*) new_node->data = data;
 
     new_node->type = INTEGER_TYPE;
     
     new_node->next = list->head;
     list->head = new_node;
-
-
 }
 
 /**
-    * Delete a node from a list
+    * @brief Delete a node from a list
     * @param list - pointer to a list
     * @param key - The key to delete
  */
@@ -98,7 +95,7 @@ void list_delete(List* list, char *key) {
 }
 
 /** 
-    * Find a node inside a list
+    * @brief Find a node inside a list
     * @param list - pointer to a list
     * @param key - The key to search
 */
@@ -118,7 +115,7 @@ Node *list_get(List* list, char *key) {
 }
 
 /**
-    * Frees everything that the list contains and itself.
+    * @brief Frees everything that the list contains and itself.
     * @param list - A pointer to a list 
 */
 
@@ -138,8 +135,8 @@ void list_free(List* list) {
 }
 
 /**
-    * @brief Checks if there is any usage of an extern label
-    * @param extern_usage the extern usage list maintained through the second pass 
+    * @brief Checks if the list is empty
+    * @param list the list 
     * @return 1 if an extern exists, 0 otherwise
 */
 
@@ -151,6 +148,27 @@ int is_list_empty(List *list) {
     }
 
     return 0;
+}
+
+
+/**
+    @brief Returns the len of the longest key entry in the list
+    @param list - The list 
+    @return The length of the longest key (int)
+*/
+
+int get_list_longest_key(List *list) {
+    Node *current = list->head;
+    int longest = 0;
+
+    while (current != NULL) {
+        if (strlen(current->key) > longest) {
+            longest = strlen(current->key);
+        }
+        current = current->next;
+    }
+
+    return longest;
 }
 
 

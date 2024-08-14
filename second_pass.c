@@ -132,24 +132,20 @@ void handle_entry_line(char *line, Labels *labels, int line_num, int *found_erro
     * @param found_error A flag to indicate if an error was found
 */
 
-
 void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_usage, machine_word **code_image, int *ic_counter, int first_pass_error, int *found_error) {
     
     int is_dest_reg, is_source_reg; /* We use these to check if the encoding will use a signular word for 2 operands */
     /* Operands information */
-    char **operands;
+    char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1];
     int operands_count = 0;
     AddressMode dest = UNKNOWN_ADDRESS; /* Destination address mode */
     AddressMode source = UNKNOWN_ADDRESS; /* Source address mode */
 
-    /* Find the operands and put them in the array */
-    operands = (char **) safe_malloc(MAX_OPERANDS * (MAX_LINE_SIZE + 1) * sizeof(char *)); 
 
     /* We don't want to repeat the same error code so if theres a problem faced in first pass we just skip the line*/
 
     if (!validate_operand_list(p_line, line_num, 0)) {
         *found_error = 1;
-        free_operands(operands, operands_count);
         return;
     }
 
@@ -170,7 +166,6 @@ void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_us
 
     if (is_source_reg && is_dest_reg) {
         *ic_counter += 1; /* Destination and source are encoded at the same word */
-        free_operands(operands, operands_count);
         return; 
     } 
     
@@ -196,8 +191,6 @@ void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_us
         *ic_counter += 1;
     }
 
-    /* Free all operands */
-    free_operands(operands, operands_count);
 }
 
 /**
@@ -208,7 +201,7 @@ void handle_operands(char *p_line, int line_num, Labels *labels, List *extern_us
     * @param source The source address mode (to update )
 */
 
-void find_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source) {
+void find_address_modes(char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1], int operands_count, AddressMode *dest, AddressMode *source) {
     if (operands_count == 1) {
         /* When we have only one operand we update just the destination operand. */
         *dest = address_mode(operands[0], 0, 0, NULL);
@@ -266,7 +259,7 @@ PassError second_pass(char *file_name, Labels *labels, List *extern_usage, machi
             continue;
         }
 
-        if (label[0] != '\0') { /* As mentioned before, the is_label_error will place a \0 in the start if the label is invalid! */
+        if (label[0] != '\0') { /* Like mentioned before, the is_label_error function sets the first char to \0 if somethings wrong with the label */
             /* Move the line pointer past the label */
             p_line += strlen(label) + 1;
         }

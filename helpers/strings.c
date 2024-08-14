@@ -44,16 +44,17 @@ void remove_all_spaces(char *p) {
 
 /**
     * @brief Copies a string from the source to the destination until a space is found
-    * @param src - the source string
+    * @param p - the string
+    * @return the new string
 */
 
-char* copy_string_until_space(char *src)
+char* copy_string_until_space(char *p)
 {
     char *output = (char *)malloc(MAX_LINE_SIZE + 1); /* Allocate for the new string */
     int i = 0, j = 0;
-    while (!isspace(src[j])) /* While it's a space copy the char from src to output */
+    while (!isspace(p[j])) /* While it's a space copy the char from p to output */
     {
-        output[i] = src[j];
+        output[i] = p[j];
         i++;
         j++;
     }
@@ -72,6 +73,8 @@ char* copy_string_until_space(char *src)
 
 int is_integer(char *p)
 {
+
+    
     /*
         Note that an integer in our system can include a '+' or '-' sign at the beginning.
         So we first check if the first char is + / - and take it into account
@@ -80,6 +83,12 @@ int is_integer(char *p)
     int sign = 1;
     int num = NON_VALID_INTEGER;
     int i = 0;
+
+    skip_spaces(&p); /* Skip any spaces at the beginning */
+    if (strlen(p) == 0) /* If the string is empty */
+    {
+        return NON_VALID_INTEGER;
+    }
 
     /* Find the sign */
     if (*p == '+' || *p == '-') 

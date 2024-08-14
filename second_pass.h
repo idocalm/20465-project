@@ -22,7 +22,7 @@
 
 int replace_label(char *operand, Labels *labels, List *extern_usage, machine_word **code_image, int ic_counter, int line_num, int replace);
 void handle_entry_line(char *line, Labels *labels, int line_num, int *found_error);
-void find_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source);
+void find_address_modes(char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1], int operands_count, AddressMode *dest, AddressMode *source);
 
 PassError second_pass(char *file_name, Labels *labels, List *extern_usage, machine_word **code_image, machine_word **data_image, int first_pass_error);
 

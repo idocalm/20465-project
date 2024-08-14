@@ -11,6 +11,8 @@ ADD2: add r1,, r2
 ; Extra commas
 ADD3: add r1, r2,
 
+; No space
+
 ; Following & extra commas
 ADD4: add r1,, r2,
 

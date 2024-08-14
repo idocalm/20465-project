@@ -107,6 +107,7 @@ MacroError replace_macros(FILE *input_file, FILE *output_file, char *output_file
     char *current_name = NULL; /* Current macro name*/
     char *current_content = NULL;  /* Current macro content */
     int current_content_size = 0; /* Current macro content size */
+    char *result = NULL; /* The result of the search in the macros */
 
     label[MAX_LINE_SIZE] = '\0'; 
 
@@ -130,7 +131,7 @@ MacroError replace_macros(FILE *input_file, FILE *output_file, char *output_file
         memset(label, 0, MAX_LINE_SIZE + 1);
         is_label_error(p_line, line_num, label, 0);
         /* Check if the label is a macro */
-        if (label[0] != '\0' && search_in_macros(label, macros) != NULL) { /* The is label error func will place a \0 at the beginning if the label has some error. */
+        if (label[0] != '\0' && search_in_macros(label, macros) != NULL) { /* The is_label_error function sets the first char to \0 if somethings wrong with the label */
             log_line_error(line_num, line, "Invalid label: the label '%s' is also a macro.", label);
             found_error = 1;
             continue;
@@ -232,12 +233,17 @@ MacroError replace_macros(FILE *input_file, FILE *output_file, char *output_file
         } else {
 
             /* Search for a macro in the line, if so - replace it with the content */
-            char *search = copy_string_until_space(p_line);
-            void *result = search_in_macros(search, macros);
+            char search[MAX_LINE_SIZE + 1];
+            strcpy(search, line);
+            remove_all_spaces(search);
+
+            result = search_in_macros(search, macros);
+
+            if (strlen(search) > 0) 
+                strcat(search, "\n");
 
             /* Add to the file */
-            fprintf(output_file, "%s", result != NULL ? (char *) result : line);
-            safe_free(search);
+            fprintf(output_file, "%s", result != NULL ? (char *) result : search);
         }
 
     }

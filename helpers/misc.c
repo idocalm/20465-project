@@ -19,7 +19,6 @@ int validate_operand_list(char *line, int line_num, int report_error) {
     last = p_line + strlen(line) - 1;
 
     if (strlen(p_line) == 0) {
-        printf("Empty line\n");
         return 1; /* No operands */
     }
 
@@ -71,18 +70,17 @@ int validate_operand_list(char *line, int line_num, int report_error) {
     * @return 1 - no error, 0 - error found
 */
 
-int get_operands(char *line, char **operands, int *operands_count, int line_num) {
+int get_operands(char *line, char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1], int *operands_count, int line_num) {
     int i = 0;
     char *operand = NULL;
 
     /* Copy so we won't damage the original string */
-    char *line_copy = (char *) safe_malloc(strlen(line) + 1);
+    char line_copy[MAX_LINE_SIZE + 1];
     strcpy(line_copy, line);
     line_copy[strlen(line)] = '\0';
     /* realloc line copy to remove the last \n */
 
     if (!validate_operand_list(line, line_num, 1)) { /* Check if the operand list is valid (this will report errors) */
-        safe_free(line_copy);
         return 0;
     }
 
@@ -91,14 +89,12 @@ int get_operands(char *line, char **operands, int *operands_count, int line_num)
     while (operand != NULL) {
 
         if (i == MAX_OPERANDS + 1) { /* We can't have more then 2 operands */
-            safe_free(line_copy);
             return 0;
         }
 
         remove_all_spaces(operand); /* Remove all spaces from the operand */
         
         if (strlen(operand) > 0) { /* If the operand is not empty  */
-            operands[i] = (char *) safe_malloc(strlen(operand) + 1);
             strcpy(operands[i], operand);
             i++;
         } 
@@ -107,14 +103,15 @@ int get_operands(char *line, char **operands, int *operands_count, int line_num)
     }
     *operands_count = i;
 
-    safe_free(line_copy);
     return 1; 
 }
 
 /**
     * @brief Validates the size of an integer
     * @param value The integer to validate
-    * @param line_num The line number
+    * @param signed_min The minimum value for a signed integer
+    * @param unsigned_min The minimum value for an unsigned integer
+    * @param unsigned_max The maximum value for an unsigned integer
     * @return 1 if the integer is valid, 0 otherwise
 */
 
@@ -168,7 +165,7 @@ void validate_string_instruction(char *line, int line_num, int *found_error) {
         *found_error = 1;
         return; 
     }
-    ptr += 2; /* Skip the " */
+    ptr += 1; /* Skip the " */
 
     /* Skip the inner charcters */
     while (*ptr != '\n' && *ptr != '\0' && *ptr != '"')
@@ -239,7 +236,7 @@ void add_to_code_image(machine_word **code_image, machine_word *word, int *ic, i
     * @param found_error - a flag to indicate if an error was found
 */
 
-void extract_address_modes(char **operands, int operands_count, AddressMode *dest, AddressMode *source, int line_num, int *found_error) {
+void extract_address_modes(char operands[MAX_OPERANDS][MAX_LINE_SIZE + 1], int operands_count, AddressMode *dest, AddressMode *source, int line_num, int *found_error) {
     
     /* 
         Note that the validation of the operands themselves are done inside address_mode function
