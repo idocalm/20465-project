@@ -110,7 +110,7 @@ int is_reserved_word(char *str)
 
     remove_all_spaces(str);
     is_data_command = strcmp(str, ".data") == 0 || strcmp(str, ".string") == 0 || strcmp(str, ".entry") == 0 || strcmp(str, ".extern") == 0;
-    is_macr = strcmp(str, "macr") == 0;
+    is_macr = strcmp(str, "macr") == 0 || strcmp(str, "endmacr") == 0; 
 
     return get_operation(str) != UNKNOWN_OPERATION || get_register(str) != UNKNOWN_REGISTER || get_instruction(str) != UNKNOWN_INSTRUCTION || is_data_command || is_macr;
 }
